@@ -1,0 +1,67 @@
+
+import React, { useState } from 'react';
+import { HashRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import Home from './components/Home';
+import SalesAnalysis from './components/SalesAnalysis';
+import { 
+  Home as HomeIcon, 
+  BarChart2, 
+  ClipboardList, 
+  User 
+} from 'lucide-react';
+
+const BottomNav = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const navItems = [
+    { id: 'home', label: '首页', icon: <HomeIcon size={20} />, path: '/' },
+    { id: 'analysis', label: '运营分析', icon: <BarChart2 size={20} />, path: '/analysis-placeholder' },
+    { id: 'manage', label: '现场管理', icon: <ClipboardList size={20} />, path: '/manage-placeholder' },
+    { id: 'profile', label: '我的', icon: <User size={20} />, path: '/profile-placeholder' },
+  ];
+
+  const handleNav = (path: string) => {
+    if (path === '/') {
+      navigate(path);
+    } else {
+      alert('该功能模块正在开发中...');
+    }
+  };
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-4 safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
+      {navItems.map((item) => {
+        const isActive = location.pathname === item.path;
+        return (
+          <button
+            key={item.id}
+            onClick={() => handleNav(item.path)}
+            className={`flex flex-col items-center space-y-1 transition-colors ${
+              isActive ? 'text-blue-600 font-medium' : 'text-gray-400'
+            }`}
+          >
+            {item.icon}
+            <span className="text-xs">{item.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <div className="min-h-screen max-w-md mx-auto bg-gray-50 flex flex-col relative pb-20 overflow-x-hidden">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/sales-rate-analysis" element={<SalesAnalysis />} />
+        </Routes>
+        <BottomNav />
+      </div>
+    </Router>
+  );
+};
+
+export default App;
