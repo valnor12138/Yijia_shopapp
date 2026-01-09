@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Home from './components/Home';
 import SalesAnalysis from './components/SalesAnalysis';
+import Dialog from './components/Dialog';
 import { 
   Home as HomeIcon, 
   BarChart2, 
@@ -10,45 +11,54 @@ import {
   User 
 } from 'lucide-react';
 
-const BottomNav = () => {
+// 底部导航组件
+function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const navItems = [
     { id: 'home', label: '首页', icon: <HomeIcon size={20} />, path: '/' },
     { id: 'analysis', label: '运营分析', icon: <BarChart2 size={20} />, path: '/analysis-placeholder' },
     { id: 'manage', label: '现场管理', icon: <ClipboardList size={20} />, path: '/manage-placeholder' },
-    { id: 'profile', label: '我的', icon: <User size={20} />, path: '/profile-placeholder' },
+    { id: 'profile', label: '我的', icon: <User size={20} />, path: '/profile-placeholder' }
   ];
 
   const handleNav = (path: string) => {
     if (path === '/') {
       navigate(path);
     } else {
-      alert('该功能模块正在开发中...');
+      setDialogOpen(true);
     }
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-4 safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-      {navItems.map((item) => {
-        const isActive = location.pathname === item.path;
-        return (
-          <button
-            key={item.id}
-            onClick={() => handleNav(item.path)}
-            className={`flex flex-col items-center space-y-1 transition-colors ${
-              isActive ? 'text-blue-600 font-medium' : 'text-gray-400'
-            }`}
-          >
-            {item.icon}
-            <span className="text-xs">{item.label}</span>
-          </button>
-        );
-      })}
-    </div>
+    <>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-4 safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNav(item.path)}
+              className={`flex flex-col items-center space-y-1 transition-colors ${isActive ? 'text-blue-600 font-medium' : 'text-gray-400'}`}
+            >
+              {item.icon}
+              <span className="text-xs">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <Dialog
+        isOpen={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="功能开发中"
+        message="该功能模块正在开发中，敬请期待！"
+        confirmText="知道了"
+      />
+    </>
   );
-};
+}
 
 const App: React.FC = () => {
   console.log('App component rendered');

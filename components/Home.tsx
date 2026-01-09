@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Megaphone, 
@@ -22,9 +22,12 @@ import {
   Sparkles,
   BarChart3
 } from 'lucide-react';
+import Dialog from './Dialog';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState('');
 
   const reportGroups = [
     {
@@ -61,7 +64,8 @@ const Home: React.FC = () => {
     if (item.implemented) {
       navigate('/sales-rate-analysis');
     } else {
-      alert(`「${item.label}」功能正在开发中，敬请期待！`);
+      setDialogMessage(`「${item.label}」功能正在开发中，敬请期待！`);
+      setDialogOpen(true);
     }
   };
 
@@ -113,6 +117,13 @@ const Home: React.FC = () => {
         {/* Placeholder for bottom margin */}
         <div className="h-10"></div>
       </main>
+      <Dialog
+        isOpen={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="功能开发中"
+        message={dialogMessage}
+        confirmText="知道了"
+      />
     </div>
   );
 };
