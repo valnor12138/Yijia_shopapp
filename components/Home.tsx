@@ -34,7 +34,7 @@ const Home: React.FC = () => {
       title: '品态管理类报表',
       items: [
         { id: 'new', label: '新品报表', icon: <PlusCircle className="text-blue-400" />, color: 'bg-blue-50' },
-        { id: 'category', label: '品类销售', icon: <Tag className="text-green-500" />, color: 'bg-green-50' },
+        { id: 'category', label: '品类销售', icon: <Tag className="text-green-500" />, color: 'bg-green-50', implemented: true },
         { id: 'rate', label: '动销率分析', icon: <BarChart className="text-cyan-400" />, color: 'bg-cyan-50', implemented: true },
         { id: 'stockout', label: '缺货报表', icon: <AlertTriangle className="text-red-400" />, color: 'bg-red-50' },
         { id: 'abnormal', label: '品态异常', icon: <XCircle className="text-purple-400" />, color: 'bg-purple-50' },
@@ -62,7 +62,11 @@ const Home: React.FC = () => {
 
   const handleItemClick = (item: any) => {
     if (item.implemented) {
-      navigate('/sales-rate-analysis');
+      if (item.id === 'category') {
+        navigate('/category-sales');
+      } else {
+        navigate('/sales-rate-analysis');
+      }
     } else {
       setDialogMessage(`「${item.label}」功能正在开发中，敬请期待！`);
       setDialogOpen(true);

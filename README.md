@@ -47,7 +47,11 @@ View your app in AI Studio: https://ai.studio/apps/drive/1G4pHBjE7QByWAOUe9poq8E
 
 - **首页**：展示各类报表和数据分析功能
 - **销售数据分析**：提供销售数据的可视化分析
-- **底部导航**：快速访问不同功能模块（部分功能正在开发中）
+- **运营分析**：展示运营数据和关键指标
+- **现场管理**：显示现场状态和待处理任务
+- **我的界面**：用户信息和相关功能入口
+- **品类销售**：实现真实数据库连接，展示销售客单按时段数据的可视化分析
+![alt text](image.png)
 
 ## 技术栈
 
@@ -58,3 +62,43 @@ View your app in AI Studio: https://ai.studio/apps/drive/1G4pHBjE7QByWAOUe9poq8E
 - Tailwind CSS
 - Recharts
 - Lucide React
+- Node.js
+- Express
+- MSSQL（SQL Server驱动）
+
+## API服务器
+
+### 启动方式
+
+1. 进入server目录：
+   ```bash
+   cd server
+   ```
+
+2. 安装依赖：
+   ```bash
+   npm install
+   ```
+
+3. 启动服务器：
+   ```bash
+   npm start
+   ```
+
+   或使用开发模式（自动重启）：
+   ```bash
+   npm run dev
+   ```
+
+### API说明
+
+- **POST /api/execute-sql**：执行SQL查询
+  - 请求体：`{ "sql": "SQL查询语句" }`
+  - 响应：`{ "success": true, "data": [...], "message": "查询成功，返回 X 条记录" }`
+
+### 数据库配置
+
+数据库连接配置位于 `server/api.js` 文件中，可根据实际情况修改。
+
+
+注意不要使用校园网进行连接。
