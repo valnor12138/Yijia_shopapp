@@ -54,6 +54,9 @@ const Home: React.FC = () => {
     }
   ];
 
+  console.log('Home component rendered');
+  console.log('reportGroups:', reportGroups);
+
   const handleItemClick = (item: any) => {
     if (item.implemented) {
       navigate('/sales-rate-analysis');

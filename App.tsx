@@ -51,6 +51,7 @@ const BottomNav = () => {
 };
 
 const App: React.FC = () => {
+  console.log('App component rendered');
   return (
     <Router>
       <div className="min-h-screen max-w-md mx-auto bg-gray-50 flex flex-col relative pb-20 overflow-x-hidden">
