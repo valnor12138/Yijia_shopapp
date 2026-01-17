@@ -41,7 +41,12 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3001/api/execute-sql', {
+      // 开发环境使用本地服务器，生产环境使用 Netlify Functions
+      const apiUrl = import.meta.env.DEV 
+        ? 'http://localhost:3001/api/execute-sql'
+        : '/.netlify/functions/execute-sql';
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
