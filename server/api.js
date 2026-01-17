@@ -1,3 +1,6 @@
+// 加载环境变量
+require('dotenv').config();
+
 const express = require('express');
 const sql = require('mssql');
 const cors = require('cors');
@@ -6,13 +9,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 数据库配置
+// 数据库配置 - 从环境变量读取
 const config = {
-  user: 'rou_9999',
-  password: 'kl87ngG@f',
-  server: 'tag.qyyjtr.com',
-  port: 6899,
-  database: 'enjoy_shq_test',
+  user: process.env.DB_USER || '',
+  password: process.env.DB_PASSWORD || '',
+  server: process.env.DB_SERVER || '',
+  port: parseInt(process.env.DB_PORT || '1433', 10),
+  database: process.env.DB_NAME || '',
   options: {
     encrypt: false,
     trustServerCertificate: true,
@@ -20,6 +23,20 @@ const config = {
     requestTimeout: 60000 // 增加查询超时时间到60秒
   }
 };
+
+// 验证必需的环境变量
+const requiredEnvVars = ['DB_USER', 'DB_PASSWORD', 'DB_SERVER', 'DB_NAME'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('❌ 数据库配置缺失！请设置以下环境变量：');
+  missingVars.forEach(varName => {
+    console.error(`   - ${varName}`);
+  });
+  console.error('   本地开发：在 server 目录创建 .env 文件');
+  console.error('   生产环境：在部署平台设置环境变量');
+  process.exit(1);
+}
 
 // 测试数据库连接
 async function testConnection() {
