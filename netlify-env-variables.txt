@@ -1,0 +1,17 @@
+# Netlify 环境变量配置
+# 复制以下内容到 Netlify 控制台的 Environment variables
+
+# ============================================
+# 前端环境变量（用于 Coze 聊天）
+# ============================================
+VITE_COZE_BOT_ID=7587693887050203162
+VITE_COZE_TOKEN=pat_KZG9X9M0SPp1H9Lx2UUdJLJqu7JGW7Xd97dJvA3GVUJORDsVKvULePowZF2PH9N1
+
+# ============================================
+# 后端环境变量（用于数据库连接）
+# ============================================
+DB_USER=rou_9999
+DB_PASSWORD=kl87ngG@f
+DB_SERVER=tag.qyyjtr.com
+DB_PORT=6899
+DB_NAME=enjoy_shq_test

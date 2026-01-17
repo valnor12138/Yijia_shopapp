@@ -28,6 +28,20 @@ if (missingVars.length > 0) {
 }
 
 exports.handler = async (event, context) => {
+  // 记录请求信息（用于调试）
+  console.log('Function invoked:', {
+    method: event.httpMethod,
+    path: event.path,
+    hasBody: !!event.body,
+    envVarsSet: {
+      DB_USER: !!process.env.DB_USER,
+      DB_PASSWORD: !!process.env.DB_PASSWORD,
+      DB_SERVER: !!process.env.DB_SERVER,
+      DB_NAME: !!process.env.DB_NAME,
+      DB_PORT: !!process.env.DB_PORT
+    }
+  });
+
   // 设置 CORS 头
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -71,7 +85,21 @@ exports.handler = async (event, context) => {
 
   try {
     // 解析请求体
-    const { sql: sqlQuery } = JSON.parse(event.body);
+    let sqlQuery;
+    try {
+      const body = JSON.parse(event.body);
+      sqlQuery = body.sql;
+    } catch (parseErr) {
+      console.error('JSON解析错误:', parseErr);
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          success: false,
+          error: '请求体格式错误，需要有效的 JSON'
+        })
+      };
+    }
     
     if (!sqlQuery) {
       return {
@@ -84,8 +112,16 @@ exports.handler = async (event, context) => {
       };
     }
 
+    console.log('准备连接数据库:', {
+      server: config.server,
+      port: config.port,
+      database: config.database,
+      user: config.user
+    });
+
     // 连接数据库并执行查询
     await sql.connect(config);
+    console.log('数据库连接成功');
     
     // 执行SQL查询
     const result = await sql.query(sqlQuery);
@@ -106,7 +142,20 @@ exports.handler = async (event, context) => {
       })
     };
   } catch (err) {
-    console.error('SQL执行错误:', err);
+    // 记录详细错误信息
+    console.error('SQL执行错误:', {
+      message: err.message,
+      code: err.code,
+      name: err.name,
+      stack: err.stack,
+      config: {
+        server: config.server,
+        port: config.port,
+        database: config.database,
+        user: config.user,
+        hasPassword: !!config.password
+      }
+    });
     
     // 确保连接已关闭
     try {
@@ -115,12 +164,21 @@ exports.handler = async (event, context) => {
       // 忽略关闭错误
     }
     
+    // 返回详细的错误信息（开发环境）或简化信息（生产环境）
+    const errorMessage = process.env.NETLIFY_DEV 
+      ? `${err.message} (Code: ${err.code || 'N/A'})`
+      : err.message || 'SQL执行失败';
+    
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         success: false,
-        error: err.message || 'SQL执行失败'
+        error: errorMessage,
+        details: process.env.NETLIFY_DEV ? {
+          code: err.code,
+          name: err.name
+        } : undefined
       })
     };
   }
