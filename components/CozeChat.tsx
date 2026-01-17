@@ -21,23 +21,6 @@ const CozeChat: React.FC = () => {
   const [buttonPos, setButtonPos] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(true);
 
-  // #region agent log
-  const logDebug = (message: string, data?: any, hypothesisId?: string) => {
-    fetch('http://127.0.0.1:7242/ingest/33eec7d8-5582-485f-8dc2-2920f0b21fa1', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'CozeChat.tsx',
-        message,
-        data: data || {},
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        hypothesisId: hypothesisId || 'N/A'
-      })
-    }).catch(() => {});
-  };
-  // #endregion
-
   /**
    * 加载 Coze SDK
    */
@@ -46,17 +29,11 @@ const CozeChat: React.FC = () => {
       // 检查SDK是否已经加载
       if (window.CozeWebSDK && window.CozeWebSDK.WebChatClient) {
         console.log('✓ Coze SDK already loaded');
-        // #region agent log
-        logDebug('SDK already loaded', {}, 'A');
-        // #endregion
         resolve();
         return;
       }
 
       console.log('Loading Coze SDK...');
-      // #region agent log
-      logDebug('Loading SDK', {}, 'A');
-      // #endregion
       const script = document.createElement('script');
       script.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js';
       script.async = true;
@@ -70,9 +47,6 @@ const CozeChat: React.FC = () => {
           attempts++;
           if (window.CozeWebSDK && window.CozeWebSDK.WebChatClient) {
             console.log('✓ Coze SDK loaded successfully');
-            // #region agent log
-            logDebug('SDK loaded successfully', { attempts }, 'A');
-            // #endregion
             resolve();
           } else if (attempts < maxAttempts) {
             setTimeout(checkSDK, 100);
@@ -316,7 +290,7 @@ const CozeChat: React.FC = () => {
       // 开始长按计时器
       const timerId = setTimeout(() => {
         // 再次检查按钮引用
-        const activeButton = cozeButtonRef.current || currentButton;
+        let activeButton = cozeButtonRef.current || currentButton;
         
         // #region agent log
         logDebug('Long press timer callback executing', {
@@ -324,6 +298,30 @@ const CozeChat: React.FC = () => {
           buttonInDocument: activeButton ? document.body.contains(activeButton) : false
         }, 'C');
         // #endregion
+        
+        // 如果按钮不在DOM中，尝试重新查找
+        if (!activeButton || !document.body.contains(activeButton)) {
+          // #region agent log
+          logDebug('Button not in DOM, attempting to re-find', {}, 'C');
+          // #endregion
+          
+          // 尝试重新查找按钮
+          const found = findAndTransformCozeButton();
+          if (found && cozeButtonRef.current) {
+            activeButton = cozeButtonRef.current;
+            // #region agent log
+            logDebug('Button re-found in timer callback', {
+              buttonExists: activeButton !== null,
+              buttonInDocument: activeButton ? document.body.contains(activeButton) : false
+            }, 'C');
+            // #endregion
+          } else {
+            // #region agent log
+            logDebug('Button not found in timer callback, cannot activate drag', {}, 'C');
+            // #endregion
+            return;
+          }
+        }
         
         if (!activeButton) {
           // #region agent log
@@ -337,7 +335,8 @@ const CozeChat: React.FC = () => {
         activeButton.style.transition = 'none';
         // #region agent log
         logDebug('Long press activated', {
-          timerId: longPressTimerRef.current !== null
+          timerId: longPressTimerRef.current !== null,
+          buttonInDocument: document.body.contains(activeButton)
         }, 'C');
         // #endregion
         
@@ -596,6 +595,13 @@ const CozeChat: React.FC = () => {
       const newVisible = !prev;
       if (cozeButtonRef.current) {
         cozeButtonRef.current.style.display = newVisible ? 'flex' : 'none';
+        cozeButtonRef.current.style.visibility = newVisible ? 'visible' : 'hidden';
+        // #region agent log
+        logDebug('Toggle visibility', {
+          newVisible,
+          buttonExists: cozeButtonRef.current !== null
+        }, 'B');
+        // #endregion
       }
       return newVisible;
     });
@@ -765,25 +771,27 @@ const CozeChat: React.FC = () => {
       return false;
     }
 
-    // 只处理第一个有效按钮，隐藏或删除其他按钮
+    // 只处理第一个有效按钮
     const mainButton = validButtons[0];
     
-    // 隐藏其他所有按钮（包括无效的）
+    // 先立即隐藏所有其他按钮，避免闪烁（但保留主按钮）
     for (let i = 0; i < allButtons.length; i++) {
       const button = allButtons[i];
-      if (button !== mainButton) {
-        button.style.display = 'none';
-        button.style.visibility = 'hidden';
-        button.style.pointerEvents = 'none';
-        // #region agent log
-        logDebug('Hiding duplicate button', {
-          width: button.offsetWidth,
-          height: button.offsetHeight,
-          index: i,
-          isMainButton: false
-        }, 'B');
-        // #endregion
+      // 如果是主按钮，跳过隐藏
+      if (button === mainButton) {
+        continue;
       }
+      button.style.display = 'none';
+      button.style.visibility = 'hidden';
+      button.style.pointerEvents = 'none';
+      // #region agent log
+      logDebug('Hiding duplicate button immediately', {
+        width: button.offsetWidth,
+        height: button.offsetHeight,
+        index: i,
+        isMainButton: false
+      }, 'B');
+      // #endregion
     }
     
     // 检查主按钮是否已经处理过
@@ -822,7 +830,7 @@ const CozeChat: React.FC = () => {
   };
 
   /**
-   * 使用 MutationObserver 监听按钮创建
+   * 使用 MutationObserver 监听按钮创建和变化
    */
   const setupButtonObserver = (): void => {
     if (observerRef.current) {
@@ -830,7 +838,38 @@ const CozeChat: React.FC = () => {
     }
 
     const observer = new MutationObserver((mutations) => {
+      // 检查当前按钮是否还在DOM中
+      if (cozeButtonRef.current && !document.body.contains(cozeButtonRef.current)) {
+        // #region agent log
+        logDebug('Current button removed from DOM, will re-find', {
+          buttonExists: cozeButtonRef.current !== null
+        }, 'E');
+        // #endregion
+        processedButtonsRef.current.delete(cozeButtonRef.current);
+        cozeButtonRef.current = null;
+        
+        // 延迟重新查找，确保DOM完全更新
+        setTimeout(() => {
+          const found = findAndTransformCozeButton();
+          if (found && cozeButtonRef.current) {
+            cozeButtonRef.current.style.display = isVisible ? 'flex' : 'none';
+            cozeButtonRef.current.style.visibility = isVisible ? 'visible' : 'hidden';
+            // #region agent log
+            logDebug('Button re-found after removal', {
+              buttonInDocument: document.body.contains(cozeButtonRef.current),
+              isVisible
+            }, 'E');
+            // #endregion
+          }
+        }, 200);
+        return;
+      }
+      
+      // 检查是否有新的按钮出现
+      let shouldRecheck = false;
+      
       for (const mutation of mutations) {
+        // 检查新增的节点
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             const el = node as HTMLElement;
@@ -839,74 +878,80 @@ const CozeChat: React.FC = () => {
             if (el.tagName.toLowerCase() === 'img') {
               const img = el as HTMLImageElement;
               if (img.src?.includes('coze.cn') && img.src?.includes('836ebe4738d6a87f1d14')) {
+                shouldRecheck = true;
                 // #region agent log
-                logDebug('Observer found coze logo image', {}, 'E');
+                logDebug('Observer found coze logo image added', {}, 'E');
                 // #endregion
-                // 找到图片，查找其父容器
-                let parent = img.parentElement;
-                while (parent && parent !== document.body) {
-                  const style = window.getComputedStyle(parent);
-                  if (style.position === 'fixed' && parent.offsetWidth > 0 && parent.offsetHeight > 0) {
-                    // 检查是否已处理
-                    if (!processedButtonsRef.current.has(parent)) {
-                      // #region agent log
-                      logDebug('Observer transforming button via image', {
-                        width: parent.offsetWidth,
-                        height: parent.offsetHeight
-                      }, 'E');
-                      // #endregion
-                      cozeButtonRef.current = parent;
-                      transformToFloatingBall(parent);
-                      setupDragHandlers(parent);
-                      restoreButtonPosition(parent);
-                      observer.disconnect();
-                      observerRef.current = null;
-                      return;
-                    }
-                  }
-                  parent = parent.parentElement;
-                }
+                break;
               }
             }
             
             // 检查子元素中是否有 Coze logo 图片
-            const cozeImg = el.querySelector('img[src*="coze.cn"][src*="836ebe4738d6a87f1d14"]') as HTMLElement;
+            const cozeImg = el.querySelector('img[src*="coze.cn"][src*="836ebe4738d6a87f1d14"]');
             if (cozeImg) {
-              let parent = cozeImg.parentElement;
-              while (parent && parent !== document.body) {
-                const style = window.getComputedStyle(parent);
-                if (style.position === 'fixed' && parent.offsetWidth > 0 && parent.offsetHeight > 0) {
-                  // 检查是否已处理
-                  if (!processedButtonsRef.current.has(parent)) {
-                    // #region agent log
-                    logDebug('Observer transforming button via child image', {
-                      width: parent.offsetWidth,
-                      height: parent.offsetHeight
-                    }, 'E');
-                    // #endregion
-                    cozeButtonRef.current = parent;
-                    transformToFloatingBall(parent);
-                    setupDragHandlers(parent);
-                    restoreButtonPosition(parent);
-                    observer.disconnect();
-                    observerRef.current = null;
-                    return;
-                  }
-                }
-                parent = parent.parentElement;
-              }
+              shouldRecheck = true;
+              // #region agent log
+              logDebug('Observer found coze logo in child', {}, 'E');
+              // #endregion
+              break;
             }
           }
         }
+        
+        // 检查属性变化（可能是按钮被SDK重新创建或修改）
+        if (mutation.type === 'attributes' && mutation.target) {
+          const target = mutation.target as HTMLElement;
+          if (target.querySelector && target.querySelector('img[src*="coze.cn"]')) {
+            shouldRecheck = true;
+            // #region agent log
+            logDebug('Observer detected attribute change on coze button', {
+              attributeName: mutation.attributeName
+            }, 'E');
+            // #endregion
+          }
+        }
+      }
+      
+      // 如果检测到变化且当前没有按钮，重新查找和处理按钮
+      if (shouldRecheck && !cozeButtonRef.current) {
+        // 延迟一下，确保DOM完全更新
+        setTimeout(() => {
+          // #region agent log
+          logDebug('Rechecking buttons after mutation', {
+            currentButtonExists: cozeButtonRef.current !== null
+          }, 'E');
+          // #endregion
+          
+          const found = findAndTransformCozeButton();
+          if (found && cozeButtonRef.current) {
+            // 确保按钮可见性同步
+            if (cozeButtonRef.current) {
+              cozeButtonRef.current.style.display = isVisible ? 'flex' : 'none';
+              cozeButtonRef.current.style.visibility = isVisible ? 'visible' : 'hidden';
+              // #region agent log
+              logDebug('Button re-bound after mutation', {
+                buttonInDocument: document.body.contains(cozeButtonRef.current),
+                isVisible
+              }, 'E');
+              // #endregion
+            }
+          }
+        }, 100);
       }
     });
 
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
     });
 
     observerRef.current = observer;
+    
+    // #region agent log
+    logDebug('Button observer setup (continuous monitoring)', {}, 'E');
+    // #endregion
   };
 
   /**
@@ -962,7 +1007,10 @@ const CozeChat: React.FC = () => {
         const found = findAndTransformCozeButton();
         if (found || attempts >= maxAttempts) {
           clearInterval(findButtonInterval);
-          if (!found) {
+          if (found) {
+            // 找到按钮后，启动持续监听，以便在聊天窗口打开后重新绑定
+            setupButtonObserver();
+          } else {
             console.log('未找到按钮，启动 Observer 监听');
             setupButtonObserver();
           }
