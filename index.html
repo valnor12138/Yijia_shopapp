@@ -18,6 +18,34 @@
         .safe-area-bottom {
             padding-bottom: env(safe-area-inset-bottom);
         }
+        /* Coze 悬浮球样式 */
+        [class*="coze"],
+        [id*="coze"] {
+            pointer-events: auto !important;
+            visibility: visible !important;
+        }
+        .coze-floating-ball {
+            position: fixed !important;
+            width: 60px !important;
+            height: 60px !important;
+            border-radius: 50% !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            cursor: grab !important;
+            transition: transform 0.2s, box-shadow 0.2s !important;
+            z-index: 9999 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+        }
+        .coze-floating-ball:active {
+            cursor: grabbing !important;
+        }
+        .coze-floating-ball > * {
+            margin: auto !important;
+        }
     </style>
 
 </head>

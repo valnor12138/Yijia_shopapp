@@ -7,6 +7,7 @@ import AnalysisPlaceholder from './components/AnalysisPlaceholder';
 import ManagePlaceholder from './components/ManagePlaceholder';
 import ProfilePlaceholder from './components/ProfilePlaceholder';
 import CategorySales from './components/CategorySales';
+import CozeChat from './components/CozeChat';
 import { 
   Home as HomeIcon, 
   BarChart2, 
@@ -63,6 +64,7 @@ const App: React.FC = () => {
           <Route path="/category-sales" element={<CategorySales />} />
         </Routes>
         <BottomNav />
+        <CozeChat />
       </div>
     </Router>
   );
