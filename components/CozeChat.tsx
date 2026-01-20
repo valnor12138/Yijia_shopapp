@@ -343,18 +343,49 @@ const CozeChat: React.FC = () => {
       }
     };
 
+    // 自动靠边功能
+    const autoSnapToEdge = (button: HTMLElement) => {
+      const rect = button.getBoundingClientRect();
+      const buttonHalfWidth = rect.width / 2;
+      const windowCenterX = window.innerWidth / 2;
+      
+      // 计算按钮中心位置
+      const buttonCenterX = rect.left + buttonHalfWidth;
+      
+      // 决定吸附到左边缘还是右边缘
+      let snapX: number;
+      if (buttonCenterX < windowCenterX) {
+        // 吸附到左边缘
+        snapX = 10; // 距离左边缘10px
+      } else {
+        // 吸附到右边缘
+        snapX = window.innerWidth - rect.width - 10; // 距离右边缘10px
+      }
+      
+      // 保持当前Y坐标，或者如果在顶部/底部边缘附近则吸附
+      let snapY = parseInt(button.style.top) || 0;
+      
+      // 应用动画过渡
+      button.style.transition = 'left 0.3s ease, top 0.3s ease';
+      button.style.left = `${snapX}px`;
+      button.style.top = `${snapY}px`;
+      button.style.right = 'auto';
+      button.style.bottom = 'auto';
+      
+      // 保存新位置
+      saveButtonPosition({ x: snapX, y: snapY });
+      setButtonPos({ x: snapX, y: snapY });
+    };
+
     // 鼠标释放
     const onMouseUp = (e: MouseEvent) => {
       // 使用最新的按钮引用
       const currentButton = cozeButtonRef.current || button;
       
-      
-      
       // 清除长按计时器
       if (longPressTimerRef.current) {
         clearTimeout(longPressTimerRef.current);
         longPressTimerRef.current = null;
-        
       }
 
       if (isDragging && hasMoved) {
@@ -370,22 +401,18 @@ const CozeChat: React.FC = () => {
       
       if (currentButton) {
         currentButton.style.cursor = 'grab';
-        currentButton.style.transition = 'transform 0.2s, box-shadow 0.2s';
         currentButton.style.transform = 'scale(1)';
 
-        // 如果发生了拖拽，保存位置（从按钮样式中读取最新位置）
+        // 如果发生了拖拽，自动吸附到最近的边缘
         if (wasMoved) {
-          const currentX = parseInt(currentButton.style.left) || 0;
-          const currentY = parseInt(currentButton.style.top) || 0;
-          saveButtonPosition({ x: currentX, y: currentY });
-          
+          autoSnapToEdge(currentButton);
+        } else {
+          currentButton.style.transition = 'transform 0.2s, box-shadow 0.2s';
         }
       }
 
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
-      
-      
     };
 
     // 触摸事件支持（移动端）- 长按拖拽
@@ -475,13 +502,12 @@ const CozeChat: React.FC = () => {
       isLongPressActiveRef.current = false;
       const wasMoved = touchHasMoved;
       touchHasMoved = false;
-      button.style.transition = 'transform 0.2s, box-shadow 0.2s';
 
-      // 如果发生了拖拽，保存位置（从按钮样式中读取最新位置）
+      // 如果发生了拖拽，自动吸附到最近的边缘
       if (wasMoved) {
-        const currentX = parseInt(button.style.left) || 0;
-        const currentY = parseInt(button.style.top) || 0;
-        saveButtonPosition({ x: currentX, y: currentY });
+        autoSnapToEdge(button);
+      } else {
+        button.style.transition = 'transform 0.2s, box-shadow 0.2s';
       }
 
       document.removeEventListener('touchmove', onTouchMove);
@@ -935,31 +961,6 @@ const CozeChat: React.FC = () => {
         pointerEvents: 'none'
       }}
     >
-      {/* 隐藏/显示控制按钮 */}
-      <button
-        onClick={toggleVisibility}
-        style={{
-          position: 'fixed',
-          bottom: '80px',
-          right: '20px',
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer',
-          zIndex: 10000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-        }}
-        title={isVisible ? '隐藏悬浮球' : '显示悬浮球'}
-      >
-        {isVisible ? '👁️' : '👁️‍🗨️'}
-      </button>
       {/* Coze SDK会自动创建浮动按钮，不需要手动挂载 */}
     </div>
   );
