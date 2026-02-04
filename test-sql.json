@@ -1,0 +1,1 @@
+{"sql":"select top 10 c_gcode, c_number from tb_gdsstore where c_store_id = '11026' and c_number < 0"}
