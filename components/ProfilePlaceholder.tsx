@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, User, Settings, HelpCircle, LogOut, Bell, Shield, FileText, CreditCard } from 'lucide-react';
+import { useAuth } from '../services/AuthContext';
 
 /**
  * 我的界面
@@ -8,13 +9,14 @@ import { ChevronLeft, User, Settings, HelpCircle, LogOut, Bell, Shield, FileText
  */
 const ProfilePlaceholder: React.FC = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   // 用户信息
   const userInfo = {
-    name: '张店长',
+    name: user?.name || '用户',
     store: '北京朝阳店',
     role: '店长',
-    avatar: 'https://ui-avatars.com/api/?name=张店长&background=random'
+    avatar: `https://ui-avatars.com/api/?name=${user?.name || '用户'}&background=random`
   };
 
   // 功能菜单
@@ -35,7 +37,7 @@ const ProfilePlaceholder: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 pb-16">
+    <div className="flex flex-col min-h-screen bg-gray-50 pb-16 overflow-y-auto">
       {/* Header */}
       <header className="bg-white border-b border-gray-100 py-4 px-4 sticky top-0 z-40 shadow-sm flex items-center">
         <button 
@@ -86,7 +88,13 @@ const ProfilePlaceholder: React.FC = () => {
             <ChevronLeft size={16} className="text-gray-400 rotate-180" />
           </button>
         ))}
-        <button className="w-full flex items-center justify-between p-4 text-red-500 hover:bg-gray-50 transition-colors">
+        <button 
+          className="w-full flex items-center justify-between p-4 text-red-500 hover:bg-gray-50 transition-colors"
+          onClick={() => {
+            logout();
+            navigate('/login');
+          }}
+        >
           <div className="flex items-center space-x-3">
             <LogOut size={18} />
             <span className="text-sm">退出登录</span>

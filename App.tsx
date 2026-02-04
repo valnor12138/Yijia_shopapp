@@ -8,6 +8,11 @@ import ManagePlaceholder from './components/ManagePlaceholder';
 import ProfilePlaceholder from './components/ProfilePlaceholder';
 import CategorySales from './components/CategorySales';
 import CozeChat from './components/CozeChat';
+import Login from './components/Login';
+import Register from './components/Register';
+import PrivateRoute from './components/PrivateRoute';
+import PublicRoute from './components/PublicRoute';
+import { AuthProvider } from './services/AuthContext';
 import { 
   Home as HomeIcon, 
   BarChart2, 
@@ -50,22 +55,39 @@ function BottomNav() {
   );
 }
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   console.log('App component rendered');
   return (
-    <Router>
-      <div className="min-h-screen max-w-md mx-auto bg-gray-50 flex flex-col relative pb-20 overflow-x-hidden">
-        <Routes>
+    <div className="min-h-screen mx-auto bg-gray-50 flex flex-col relative pb-20 overflow-x-hidden max-w-7xl">
+      <Routes>
+        {/* 公共路由 - 不需要登录 */}
+        <Route element={<PublicRoute restricted={true} />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+        
+        {/* 私有路由 - 需要登录 */}
+        <Route element={<PrivateRoute />}>
           <Route path="/" element={<Home />} />
           <Route path="/sales-rate-analysis" element={<SalesAnalysis />} />
           <Route path="/analysis" element={<AnalysisPlaceholder />} />
           <Route path="/manage" element={<ManagePlaceholder />} />
           <Route path="/profile" element={<ProfilePlaceholder />} />
           <Route path="/category-sales" element={<CategorySales />} />
-        </Routes>
-        <BottomNav />
-        <CozeChat />
-      </div>
+        </Route>
+      </Routes>
+      <BottomNav />
+      <CozeChat />
+    </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   );
 }

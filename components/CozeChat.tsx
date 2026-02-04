@@ -132,11 +132,8 @@ const CozeChat: React.FC = () => {
 
     // 检查是否已经处理过
     if (processedButtonsRef.current.has(button)) {
-      
       return;
     }
-
-    
 
     // 标记为已处理
     processedButtonsRef.current.add(button);
@@ -211,11 +208,8 @@ const CozeChat: React.FC = () => {
 
     // 检查是否已经绑定过拖拽事件 - 如果已绑定，先移除旧的事件监听器
     if (button.getAttribute('data-drag-handlers') === 'true') {
-      
       // 不返回，继续重新绑定以确保事件监听器正确
     }
-
-    
 
     let startX = 0;
     let startY = 0;
@@ -230,10 +224,7 @@ const CozeChat: React.FC = () => {
       // 使用最新的按钮引用，而不是闭包中的 button
       const currentButton = cozeButtonRef.current || button;
       
-      
-      
       if (!currentButton) {
-        
         return;
       }
       
@@ -243,7 +234,6 @@ const CozeChat: React.FC = () => {
       if (longPressTimerRef.current) {
         clearTimeout(longPressTimerRef.current);
         longPressTimerRef.current = null;
-        
       }
       
       hasMoved = false;
@@ -261,25 +251,18 @@ const CozeChat: React.FC = () => {
         // 再次检查按钮引用
         let activeButton = cozeButtonRef.current || currentButton;
         
-        
-        
         // 如果按钮不在DOM中，尝试重新查找
         if (!activeButton || !document.body.contains(activeButton)) {
-          
-          
           // 尝试重新查找按钮
           const found = findAndTransformCozeButton();
           if (found && cozeButtonRef.current) {
             activeButton = cozeButtonRef.current;
-            
           } else {
-            
             return;
           }
         }
         
         if (!activeButton) {
-          
           return;
         }
         
@@ -287,14 +270,11 @@ const CozeChat: React.FC = () => {
         activeButton.style.cursor = 'grabbing';
         activeButton.style.transition = 'none';
         
-        
         document.addEventListener('mousemove', onMouseMove, { passive: true });
         document.addEventListener('mouseup', onMouseUp);
       }, longPressDelay);
       
       longPressTimerRef.current = timerId;
-      
-      
     };
 
     // 鼠标移动
@@ -318,7 +298,6 @@ const CozeChat: React.FC = () => {
           setIsDragging(true);
           hasMoved = true;
           e.preventDefault();
-          
         }
 
         const moveDeltaX = e.clientX - startX;
@@ -362,7 +341,7 @@ const CozeChat: React.FC = () => {
         snapX = window.innerWidth - rect.width - 10; // 距离右边缘10px
       }
       
-      // 保持当前Y坐标，或者如果在顶部/底部边缘附近则吸附
+      // 保持当前Y坐标
       let snapY = parseInt(button.style.top) || 0;
       
       // 应用动画过渡
@@ -441,7 +420,6 @@ const CozeChat: React.FC = () => {
         isLongPressActiveRef.current = true;
         button.style.transition = 'none';
         
-        
         document.addEventListener('touchmove', onTouchMove, { passive: true });
         document.addEventListener('touchend', onTouchEnd);
       }, longPressDelay);
@@ -515,15 +493,12 @@ const CozeChat: React.FC = () => {
     };
 
     // 绑定事件（确保事件监听器正确绑定）
-    // 使用 once: false 确保事件监听器持续有效
     button.addEventListener('mousedown', onMouseDown, { passive: false, once: false });
     button.addEventListener('touchstart', onTouchStart, { passive: false, once: false });
     
     // 标记已绑定拖拽事件
     button.setAttribute('data-drag-handlers', 'true');
     button.setAttribute('data-coze-button-id', `coze-btn-${Date.now()}`);
-    
-    
   };
 
   /**
@@ -612,7 +587,6 @@ const CozeChat: React.FC = () => {
   const findAndTransformCozeButton = (): boolean => {
     // 如果已经找到并处理过按钮，不再查找
     if (cozeButtonRef.current && processedButtonsRef.current.has(cozeButtonRef.current)) {
-      
       return true;
     }
 
@@ -622,7 +596,6 @@ const CozeChat: React.FC = () => {
       
       // 方法1: 查找包含 Coze logo 图片的元素或其父容器
       const cozeLogoImgs = document.querySelectorAll('img[src*="coze.cn"][src*="836ebe4738d6a87f1d14"]');
-      
 
       for (const cozeLogoImg of Array.from(cozeLogoImgs)) {
         const img = cozeLogoImg as HTMLElement;
@@ -664,8 +637,6 @@ const CozeChat: React.FC = () => {
 
       buttons.push(...fixedElements);
 
-      
-
       return buttons;
     };
 
@@ -683,7 +654,6 @@ const CozeChat: React.FC = () => {
     });
 
     if (validButtons.length === 0) {
-      
       return false;
     }
 
@@ -700,12 +670,10 @@ const CozeChat: React.FC = () => {
       button.style.display = 'none';
       button.style.visibility = 'hidden';
       button.style.pointerEvents = 'none';
-      
     }
     
     // 检查主按钮是否已经处理过
     if (processedButtonsRef.current.has(mainButton)) {
-      
       return true;
     }
 
@@ -713,8 +681,6 @@ const CozeChat: React.FC = () => {
     mainButton.style.display = 'flex';
     mainButton.style.visibility = 'visible';
     mainButton.style.pointerEvents = 'auto';
-
-    
 
     cozeButtonRef.current = mainButton;
     transformToFloatingBall(mainButton);
@@ -736,7 +702,6 @@ const CozeChat: React.FC = () => {
     const observer = new MutationObserver((mutations) => {
       // 检查当前按钮是否还在DOM中
       if (cozeButtonRef.current && !document.body.contains(cozeButtonRef.current)) {
-        
         processedButtonsRef.current.delete(cozeButtonRef.current);
         cozeButtonRef.current = null;
         
@@ -746,7 +711,6 @@ const CozeChat: React.FC = () => {
           if (found && cozeButtonRef.current) {
             cozeButtonRef.current.style.display = isVisible ? 'flex' : 'none';
             cozeButtonRef.current.style.visibility = isVisible ? 'visible' : 'hidden';
-            
           }
         }, 200);
         return;
@@ -766,7 +730,6 @@ const CozeChat: React.FC = () => {
               const img = el as HTMLImageElement;
               if (img.src?.includes('coze.cn') && img.src?.includes('836ebe4738d6a87f1d14')) {
                 shouldRecheck = true;
-                
                 break;
               }
             }
@@ -775,7 +738,6 @@ const CozeChat: React.FC = () => {
             const cozeImg = el.querySelector('img[src*="coze.cn"][src*="836ebe4738d6a87f1d14"]');
             if (cozeImg) {
               shouldRecheck = true;
-              
               break;
             }
           }
@@ -786,7 +748,6 @@ const CozeChat: React.FC = () => {
           const target = mutation.target as HTMLElement;
           if (target.querySelector && target.querySelector('img[src*="coze.cn"]')) {
             shouldRecheck = true;
-            
           }
         }
       }
@@ -795,15 +756,12 @@ const CozeChat: React.FC = () => {
       if (shouldRecheck && !cozeButtonRef.current) {
         // 延迟一下，确保DOM完全更新
         setTimeout(() => {
-          
-          
           const found = findAndTransformCozeButton();
           if (found && cozeButtonRef.current) {
             // 确保按钮可见性同步
             if (cozeButtonRef.current) {
               cozeButtonRef.current.style.display = isVisible ? 'flex' : 'none';
               cozeButtonRef.current.style.visibility = isVisible ? 'visible' : 'hidden';
-              
             }
           }
         }, 100);
@@ -818,8 +776,6 @@ const CozeChat: React.FC = () => {
     });
 
     observerRef.current = observer;
-    
-    
   };
 
   /**
@@ -828,7 +784,6 @@ const CozeChat: React.FC = () => {
   const initializeChat = async (): Promise<void> => {
     try {
       console.log('=== 开始初始化 Coze 聊天 ===');
-      
       
       await loadCozeSDK();
 

@@ -169,7 +169,7 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 pb-16">
+    <div className="flex flex-col min-h-screen bg-gray-50 pb-16 overflow-y-auto">
       {/* Header */}
       <header className="bg-white border-b border-gray-100 py-4 px-4 sticky top-0 z-40 shadow-sm flex items-center">
         <button 
