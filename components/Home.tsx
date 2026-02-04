@@ -33,14 +33,14 @@ const Home: React.FC = () => {
     {
       title: '品态管理类报表',
       items: [
-        { id: 'new', label: '新品报表', icon: <PlusCircle className="text-blue-400" />, color: 'bg-blue-50' },
+        { id: 'new', label: '新品报表', icon: <PlusCircle className="text-blue-400" />, color: 'bg-blue-50', implemented: true },
         { id: 'category', label: '品类销售', icon: <Tag className="text-green-500" />, color: 'bg-green-50', implemented: true },
         { id: 'rate', label: '动销率分析', icon: <BarChart className="text-cyan-400" />, color: 'bg-cyan-50', implemented: true },
         { id: 'stockout', label: '缺货报表', icon: <AlertTriangle className="text-red-400" />, color: 'bg-red-50' },
         { id: 'abnormal', label: '品态异常', icon: <XCircle className="text-purple-400" />, color: 'bg-purple-50' },
         { id: 'slow', label: '滞销商品', icon: <TrendingDown className="text-orange-400" />, color: 'bg-orange-50' },
         { id: 'high_stock', label: '高库存', icon: <ArrowUpCircle className="text-yellow-500" />, color: 'bg-yellow-50' },
-        { id: 'low_stock', label: '负库存', icon: <ArrowDownCircle className="text-orange-600" />, color: 'bg-orange-50' },
+        { id: 'low_stock', label: '负库存', icon: <ArrowDownCircle className="text-orange-600" />, color: 'bg-orange-50', implemented: true },
         { id: 'profit', label: '负毛利', icon: <Coins className="text-red-500" />, color: 'bg-red-50' },
         { id: 'fulfillment', label: '货商履约', icon: <Handshake className="text-teal-500" />, color: 'bg-teal-50' },
       ]
@@ -64,6 +64,10 @@ const Home: React.FC = () => {
     if (item.implemented) {
       if (item.id === 'category') {
         navigate('/category-sales');
+      } else if (item.id === 'new') {
+        navigate('/new-product-sales');
+      } else if (item.id === 'low_stock') {
+        navigate('/low-stock');
       } else {
         navigate('/sales-rate-analysis');
       }

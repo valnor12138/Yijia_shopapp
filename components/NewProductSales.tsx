@@ -24,47 +24,71 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 /**
  * 字段映射配置
  * 将数据库字段名映射为中文显示名
- * 基于图片中显示的字段名称
+ * 基于新品销售分析[T10]的字段名称
  */
 const FIELD_MAPPING: Record<string, string> = {
   // 门店和机构相关字段
   'c_store_id': '门店ID',
   'c_store_name': '门店名称',
-  'c_ccode': '机构代码',
-  'c_ccode_name': '机构名称',
+  'c_ccode': '品类编码',
+  'c_ccode_name': '品类名称',
   
-  // 销售客单按时段字段（图片中显示的）
-  '时段': '时段',
-  '客单数': '客单数',
-  '客单量': '客单量',
-  '销售数量': '销售数量',
-  '销售金额': '销售金额',
-  '开始日期': '开始日期',
-  '结束日期': '结束日期',
-  '初始库存': '初始库存',
-  
-  // 原始SQL字段映射
-  'hours': '时段',
-  'kl': '客单数',
-  'kd': '客单量',
-  'sale': '销售数量',
-  'salesum': '销售金额',
-  'bdate': '开始日期',
-  'edate': '结束日期',
-  'init': '初始库存',
-  
-  // 其他可能的字段
+  // 新品销售分析字段
   '商品编码': '商品编码',
   '商品名称': '商品名称',
+  '条码': '条码',
+  '规格': '规格',
+  '单位': '单位',
+  '上市日期': '上市日期',
+  '首次订单日期': '首次订单日期',
+  '首次销售日期': '首次销售日期',
+  '试销期': '试销期',
+  '商品状态': '商品状态',
+  '销售状态': '销售状态',
+  '销售频率': '销售频率',
+  '供应商编码': '供应商编码',
+  '销售量': '销售量',
+  '销售额': '销售额',
+  '毛利': '毛利',
+  '毛利率': '毛利率',
+  '库存': '库存',
+  '成本金额': '成本金额',
+  '安全库存': '安全库存',
+  '在途库存': '在途库存',
+  '库存周转天数': '库存周转天数',
+  '品类名称': '品类名称',
+  
+  // 原始SQL字段映射
+  'c_gcode': '商品编码',
+  'c_name': '商品名称',
+  'c_barcode': '条码',
+  'c_model': '规格',
+  'c_basic_unit': '单位',
+  'c_introduce_date': '上市日期',
+  'c_first_order_dt': '首次订单日期',
+  'c_firstsale_dt': '首次销售日期',
+  'c_test_day': '试销期',
+  'c_status': '商品状态',
+  'c_pro_status': '生产状态',
+  'c_sale_frequency': '销售频率',
+  'c_provider': '供应商编码',
+  'c_number_sale': '销售量',
+  'c_sale': '销售额',
+  'c_maoli': '毛利',
+  'c_maoliv': '毛利率',
+  'c_number': '库存',
+  'c_at_cost': '成本金额',
+  'c_sn_perday': '安全库存',
+  'c_onway': '在途库存',
+  'c_dnlmt_day': '库存周转天数',
+  
+  // 其他可能的字段
   '分类': '分类',
   '部门': '部门',
   '机构': '机构',
-  '供应商编码': '供应商编码',
   '供应商名称': '供应商名称',
   '库存数量': '库存数量',
   '销售成本': '销售成本',
-  '毛利': '毛利',
-  '毛利率': '毛利率',
   '动销率': '动销率',
   '库存周转': '库存周转',
   '销售日期': '销售日期',
@@ -79,25 +103,37 @@ const getFieldDisplayName = (fieldName: string): string => {
 };
 
 /**
- * 品类销售页面
+ * 新品销售分析页面
  * 实现真实数据库连接和数据可视化
  */
-const CategorySales: React.FC = () => {
+const NewProductSales: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any[]>([]);
-  const [sql, setSql] = useState(`--[io]销售客单按时段[T1]
-declare @商品编码 varchar(max),@机构 varchar(1000),@部门 varchar(1000),@分类 varchar(1000),@分类长度 varchar(20),@商品名称 varchar(max),@显示无变动商品 varchar(max),
-@开始时间 datetime,@结束时间 datetime, @供应商编码 varchar(max),@开始小时 int, @结束小时 int
-select @商品编码='' , @机构='11021',@开始时间='2024-02-25' , @结束时间='2024-02-26',@显示无变动商品='否'
-,@部门='',@分类='',@商品名称='',@分类长度='' , @开始小时=0 , @结束小时=23
-exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @开始小时 , @结束小时,@分类, @分类长度,1`);
+  const [sql, setSql] = useState(`--[io]新品报表T10 
+declare @商品编码 varchar(max),@机构 varchar(1000),@部门 varchar(1000),@分类 varchar(1000),@商品名称 varchar(max),@显示无变动商品 varchar(max), 
+@开始时间 datetime,@结束时间 datetime, @供应商编码 varchar(max) , @对比开始时间 datetime , @对比结束时间 datetime , @预警天数 int,@销售频率 varchar(50) 
+select @商品编码='' , @机构='11021',@开始时间='2025-04-28' , @结束时间='2025-04-28',@显示无变动商品='否',@部门='11',@分类='',@商品名称='',@预警天数=3,@销售频率='畅销' 
+--品名 	 条码 	 规格 	 单位 	 新品日 	 首次进货日期 	 首次销售日期 	 新品天数 	 商品品态 	 促销 	 畅销 	 供应商名称 	 
+--销售数量 	 销售金额 	 销售毛利 	 销售毛利率 	 库存数量 	 库存成本 	 日均销售 	 在途数量 	 库存天数 	 分类名称
+select top 10 g.c_gcode as 商品编码,g.c_name as 商品名, g.c_barcode as 条码,g.c_model as 规格,g.c_basic_unit as 单位,gs.c_introduce_date as 新品日,
+gs.c_first_order_dt as 首次进货日期,gs.c_firstsale_dt as 首次销售日期,gs.c_test_day as 新品天数,
+gs.c_status as 商品品态,gs.c_pro_status as 促销,gs.c_sale_frequency as 畅销,gs.c_provider as 供应商名称,
+0 as 销售数量, 0 as 销售金额,0 as 销售毛利,0 as 销售毛利率,
+gs.c_number as 库存数量,gs.c_at_cost as 库存成本,gs.c_sn_perday as 日均销售,gs.c_onway as 在途数量,gs.c_dnlmt_day as 库存天数,gc.c_name as 分类名称
+from tb_gdsstore gs 
+left join tb_gds g on g.c_gcode=gs.c_gcode 
+left join tb_gdsclass gc on g.c_ccode=gc.c_ccode 
+where gs.c_store_id = @机构
+and gs.c_status not in ('暂停进货','正常流转','作废')
+and isnull(gs.c_test_day,0)<>0
+and gs.c_type like '%自营%'`);
   const [viewMode, setViewMode] = useState<'chart' | 'table' | 'sql'>('chart');
   const [error, setError] = useState<string | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({});
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [chartType, setChartType] = useState<'bar' | 'line' | 'area'>('area');
-  const [dataType, setDataType] = useState<'sales' | 'orders'>('sales');
+  const [dataType, setDataType] = useState<'sales' | 'profit'>('sales');
 
   /**
    * 运行SQL查询
@@ -107,7 +143,6 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
     setLoading(true);
     setError(null);
     try {
-      // 开发环境使用本地服务器，生产环境使用 Netlify Functions
       const apiUrl = import.meta.env.DEV 
         ? 'http://localhost:3001/api/execute-sql'
         : '/.netlify/functions/execute-sql';
@@ -178,7 +213,7 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
         >
           <ChevronLeft size={24} className="text-gray-600" />
         </button>
-        <h1 className="text-lg font-bold text-gray-800 flex-1 text-center pr-8">品类销售</h1>
+        <h1 className="text-lg font-bold text-gray-800 flex-1 text-center pr-8">新品销售分析</h1>
       </header>
 
       {/* Control Tabs */}
@@ -237,16 +272,17 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
           <>
             {viewMode === 'chart' && (
               <div className="space-y-4">
-                {/* 销售客单按时段分析图表区域 */}
+                {/* 新品销售分析图表区域 */}
                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                   {/* 图表标题和操作按钮 */}
                   <div className="mb-4 flex justify-between items-center">
                     <div>
-                      <h3 className="text-sm font-bold text-gray-800">销售客单按时段分析</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">2024-02-25 至 2024-02-26 | 机构: 11021</p>
+                      <h3 className="text-sm font-bold text-gray-800">新品销售分析</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">2025-04-28 | 门店: 11021 | 部门: 11</p>
                     </div>
                     <div className="flex space-x-2">
                       <button 
+                        onClick={runAnalysis}
                         className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-md transition-colors"
                         title="刷新数据"
                       >
@@ -279,10 +315,10 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
                       销售数据
                     </button>
                     <button 
-                      onClick={() => setDataType('orders')}
-                      className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${dataType === 'orders' ? 'text-blue-600 bg-white border-b-2 border-blue-600' : 'text-gray-500 bg-gray-50 hover:bg-gray-100'}`}
+                      onClick={() => setDataType('profit')}
+                      className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${dataType === 'profit' ? 'text-blue-600 bg-white border-b-2 border-blue-600' : 'text-gray-500 bg-gray-50 hover:bg-gray-100'}`}
                     >
-                      订单数据
+                      毛利数据
                     </button>
                   </div>
 
@@ -314,267 +350,242 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
                   {/* 图表容器 */}
                   <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      {/* 通用图表配置 */}
                       {(() => {
-                        // 获取时段字段和数值字段
-                        const timeField = data.length > 0 ? 
-                          (Object.keys(data[0]).find(key => ['hours', '时段'].includes(key.toLowerCase())) || Object.keys(data[0])[0]) 
-                          : '时段';
-                        const valueFields = data.length > 0 ? Object.keys(data[0]).filter(key => key !== timeField) : [];
-                        
-                        // 根据图表类型选择合适的图表组件
-                        const renderChart = () => {
-                          // 通用图表配置
-                          const commonProps = {
-                            data: data,
-                            margin: { top: 10, right: 30, left: 20, bottom: 10 },
-                          };
+                        const commonProps = {
+                          data: data.slice(0, 20),
+                          margin: { top: 10, right: 30, left: 20, bottom: 10 },
+                        };
 
-                          // 根据选择的数据类型过滤显示不同字段
-                          const filteredValueFields = valueFields.filter(key => {
-                            const fieldName = key.toLowerCase();
-                            
-                            // 根据数据类型显示不同的字段
-                            switch (dataType) {
-                              case 'sales':
-                                // 销售数据：销售数量、销售金额、初始库存
-                                return ['salesum', 'sale', 'init'].includes(fieldName);
-                              case 'orders':
-                                // 订单数据：客单数、客单量
-                                return ['kl', 'kd'].includes(fieldName);
+                        const filteredValueFields = data.length > 0 ? Object.keys(data[0]).filter(key => {
+                          switch (dataType) {
+                            case 'sales':
+                              return ['销售数量', '销售金额', '库存数量'].includes(key);
+                            case 'profit':
+                              return ['销售毛利', '销售毛利率'].includes(key);
+                            default:
+                              return ['销售数量', '销售金额', '销售毛利', '销售毛利率'].includes(key);
+                          }
+                        }) : [];
+
+                        const renderSeries = () => {
+                          return filteredValueFields.map((key, index) => {
+                            const commonSeriesProps = {
+                              dataKey: key,
+                              name: getFieldDisplayName(key),
+                              strokeWidth: 2,
+                            };
+
+                            switch (chartType) {
+                              case 'area':
+                                return (
+                                  <Area
+                                    key={key}
+                                    {...commonSeriesProps}
+                                    type="monotone"
+                                    fillOpacity={0.6}
+                                    fill={COLORS[index % COLORS.length]}
+                                  />
+                                );
+                              case 'line':
+                                return (
+                                  <Line
+                                    key={key}
+                                    {...commonSeriesProps}
+                                    type="monotone"
+                                    dot={{ r: 3 }}
+                                    activeDot={{ r: 5 }}
+                                  />
+                                );
+                              case 'bar':
+                                return (
+                                  <Bar
+                                    key={key}
+                                    {...commonSeriesProps}
+                                    fill={COLORS[index % COLORS.length]}
+                                    radius={[4, 4, 0, 0]}
+                                    barSize={20}
+                                  />
+                                );
                               default:
-                                return ['salesum', 'sale', 'kl', 'kd', 'init'].includes(fieldName);
+                                return null;
                             }
                           });
+                        };
 
-                          // 渲染数据系列
-                          const renderSeries = () => {
-                            return filteredValueFields.map((key, index) => {
-                              const commonSeriesProps = {
-                                key: key,
-                                dataKey: key,
-                                stroke: COLORS[index % COLORS.length],
-                                name: getFieldDisplayName(key),
-                                strokeWidth: 2,
-                              };
+                        const needDualYAxis = dataType === 'sales' && filteredValueFields.length > 1;
 
-                              switch (chartType) {
-                                case 'area':
+                        switch (chartType) {
+                          case 'area':
+                            return (
+                              <AreaChart {...commonProps}>
+                                <defs>
+                                  {filteredValueFields.map((key, index) => (
+                                    <linearGradient key={`colorKey-${index}`} id={`color${index}`} x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="5%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.8}/>
+                                      <stop offset="95%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.1}/>
+                                    </linearGradient>
+                                  ))}
+                                </defs>
+                                <XAxis dataKey="商品编码" style={{ fontSize: '12px' }} tick={{ fill: '#666' }} />
+                                <YAxis 
+                                  yAxisId="left" 
+                                  style={{ fontSize: '12px' }} 
+                                  tick={{ fill: '#666' }} 
+                                  label={needDualYAxis ? { value: '销售量/库存', angle: -90, position: 'insideLeft', fontSize: '11px' } : undefined}
+                                />
+                                {needDualYAxis && (
+                                  <YAxis 
+                                    yAxisId="right" 
+                                    orientation="right" 
+                                    style={{ fontSize: '12px' }} 
+                                    tick={{ fill: '#666' }} 
+                                    label={{ value: '销售额', angle: 90, position: 'insideRight', fontSize: '11px' }}
+                                  />
+                                )}
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} contentStyle={{ fontSize: '12px' }} />
+                                <Legend 
+                                  verticalAlign="top" 
+                                  height={24} 
+                                  formatter={(value) => getFieldDisplayName(value)}
+                                  wrapperStyle={{ paddingBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}
+                                  iconType="circle"
+                                  layout="horizontal"
+                                  iconSize={8}
+                                  itemStyle={{ fontSize: '11px', marginRight: '8px' }}
+                                />
+                                {filteredValueFields.map((key, index) => {
+                                  const commonSeriesProps = {
+                                    dataKey: key,
+                                    name: getFieldDisplayName(key),
+                                  };
+                                  
+                                  const yAxisId = key === '销售金额' ? 'right' : 'left';
+                                  
                                   return (
                                     <Area
+                                      key={key}
                                       {...commonSeriesProps}
+                                      yAxisId={yAxisId}
                                       type="monotone"
+                                      fill={`url(#color${index})`}
                                       fillOpacity={0.6}
-                                      fill={COLORS[index % COLORS.length]}
+                                      stroke={COLORS[index % COLORS.length]}
+                                      strokeWidth={2}
                                     />
                                   );
-                                case 'line':
+                                })}
+                              </AreaChart>
+                            );
+                          case 'line':
+                            return (
+                              <LineChart {...commonProps}>
+                                <XAxis dataKey="商品编码" style={{ fontSize: '12px' }} tick={{ fill: '#666' }} />
+                                <YAxis 
+                                  yAxisId="left" 
+                                  style={{ fontSize: '12px' }} 
+                                  tick={{ fill: '#666' }} 
+                                  label={needDualYAxis ? { value: '销售量/库存', angle: -90, position: 'insideLeft', fontSize: '11px' } : undefined}
+                                />
+                                {needDualYAxis && (
+                                  <YAxis 
+                                    yAxisId="right" 
+                                    orientation="right" 
+                                    style={{ fontSize: '12px' }} 
+                                    tick={{ fill: '#666' }} 
+                                    label={{ value: '销售额', angle: 90, position: 'insideRight', fontSize: '11px' }}
+                                  />
+                                )}
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} contentStyle={{ fontSize: '12px' }} />
+                                <Legend 
+                                  verticalAlign="top" 
+                                  height={24} 
+                                  formatter={(value) => getFieldDisplayName(value)}
+                                  wrapperStyle={{ paddingBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}
+                                  iconType="circle"
+                                  layout="horizontal"
+                                  iconSize={8}
+                                  itemStyle={{ fontSize: '11px', marginRight: '8px' }}
+                                />
+                                {filteredValueFields.map((key, index) => {
+                                  const commonSeriesProps = {
+                                    dataKey: key,
+                                    name: getFieldDisplayName(key),
+                                  };
+                                  
+                                  const yAxisId = key === '销售金额' ? 'right' : 'left';
+                                  
                                   return (
                                     <Line
+                                      key={key}
                                       {...commonSeriesProps}
+                                      yAxisId={yAxisId}
                                       type="monotone"
                                       dot={{ r: 3 }}
                                       activeDot={{ r: 5 }}
+                                      stroke={COLORS[index % COLORS.length]}
+                                      strokeWidth={2}
                                     />
                                   );
-                                case 'bar':
+                                })}
+                              </LineChart>
+                            );
+                          case 'bar':
+                            return (
+                              <BarChart {...commonProps}>
+                                <XAxis dataKey="商品编码" style={{ fontSize: '12px' }} tick={{ fill: '#666' }} />
+                                <YAxis 
+                                  yAxisId="left" 
+                                  style={{ fontSize: '12px' }} 
+                                  tick={{ fill: '#666' }} 
+                                  label={needDualYAxis ? { value: '销售量/库存', angle: -90, position: 'insideLeft', fontSize: '11px' } : undefined}
+                                />
+                                {needDualYAxis && (
+                                  <YAxis 
+                                    yAxisId="right" 
+                                    orientation="right" 
+                                    style={{ fontSize: '12px' }} 
+                                    tick={{ fill: '#666' }} 
+                                    label={{ value: '销售额', angle: 90, position: 'insideRight', fontSize: '11px' }}
+                                  />
+                                )}
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} contentStyle={{ fontSize: '12px' }} />
+                                <Legend 
+                                  verticalAlign="top" 
+                                  height={24} 
+                                  formatter={(value) => getFieldDisplayName(value)}
+                                  wrapperStyle={{ paddingBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}
+                                  iconType="circle"
+                                  layout="horizontal"
+                                  iconSize={8}
+                                  itemStyle={{ fontSize: '11px', marginRight: '8px' }}
+                                />
+                                {filteredValueFields.map((key, index) => {
+                                  const commonSeriesProps = {
+                                    dataKey: key,
+                                    name: getFieldDisplayName(key),
+                                  };
+                                  
+                                  const yAxisId = key === '销售金额' ? 'right' : 'left';
+                                  
                                   return (
                                     <Bar
+                                      key={key}
                                       {...commonSeriesProps}
+                                      yAxisId={yAxisId}
                                       fill={COLORS[index % COLORS.length]}
                                       radius={[4, 4, 0, 0]}
                                       barSize={20}
                                     />
                                   );
-                                default:
-                                  return null;
-                              }
-                            });
-                          };
-
-                          // 判断是否需要双Y轴（销售数据类型且有多个量级不同的字段）
-                          const needDualYAxis = dataType === 'sales' && filteredValueFields.length > 1;
-                          
-                          // 渲染不同类型的图表
-                          switch (chartType) {
-                            case 'area':
-                              return (
-                                <AreaChart {...commonProps}>
-                                  {/* 渐变定义 */}
-                                  <defs>
-                                    {filteredValueFields.map((key, index) => (
-                                      <linearGradient key={`colorKey-${index}`} id={`color${index}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.8}/>
-                                        <stop offset="95%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.1}/>
-                                      </linearGradient>
-                                    ))}
-                                  </defs>
-                                  <XAxis dataKey={timeField} style={{ fontSize: '12px' }} tick={{ fill: '#666' }} />
-                                  <YAxis 
-                                    yAxisId="left" 
-                                    style={{ fontSize: '12px' }} 
-                                    tick={{ fill: '#666' }} 
-                                    label={needDualYAxis ? { value: '销售数量/初始库存', angle: -90, position: 'insideLeft', fontSize: '11px' } : undefined}
-                                  />
-                                  {needDualYAxis && (
-                                    <YAxis 
-                                      yAxisId="right" 
-                                      orientation="right" 
-                                      style={{ fontSize: '12px' }} 
-                                      tick={{ fill: '#666' }} 
-                                      label={{ value: '销售金额', angle: 90, position: 'insideRight', fontSize: '11px' }}
-                                    />
-                                  )}
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                  <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} contentStyle={{ fontSize: '12px' }} />
-                                  <Legend 
-                                    verticalAlign="top" 
-                                    height={24} 
-                                    formatter={(value) => getFieldDisplayName(value)}
-                                    wrapperStyle={{ paddingBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}
-                                    iconType="circle"
-                                    layout="horizontal"
-                                    iconSize={8}
-                                    itemStyle={{ fontSize: '11px', marginRight: '8px' }}
-                                  />
-                                  {filteredValueFields.map((key, index) => {
-                                    const commonSeriesProps = {
-                                      dataKey: key,
-                                      stroke: COLORS[index % COLORS.length],
-                                      name: getFieldDisplayName(key),
-                                      strokeWidth: 2,
-                                    };
-                                    
-                                    // 销售金额使用右侧Y轴，其他使用左侧Y轴
-                                    const yAxisId = key.toLowerCase() === 'salesum' ? 'right' : 'left';
-                                    
-                                    return (
-                                      <Area
-                                        key={key}
-                                        {...commonSeriesProps}
-                                        yAxisId={yAxisId}
-                                        type="monotone"
-                                        fillOpacity={0.6}
-                                        fill={COLORS[index % COLORS.length]}
-                                      />
-                                    );
-                                  })}
-                                </AreaChart>
-                              );
-                            case 'line':
-                              return (
-                                <LineChart {...commonProps}>
-                                  <XAxis dataKey={timeField} style={{ fontSize: '12px' }} tick={{ fill: '#666' }} />
-                                  <YAxis 
-                                    yAxisId="left" 
-                                    style={{ fontSize: '12px' }} 
-                                    tick={{ fill: '#666' }} 
-                                    label={needDualYAxis ? { value: '销售数量/初始库存', angle: -90, position: 'insideLeft', fontSize: '11px' } : undefined}
-                                  />
-                                  {needDualYAxis && (
-                                    <YAxis 
-                                      yAxisId="right" 
-                                      orientation="right" 
-                                      style={{ fontSize: '12px' }} 
-                                      tick={{ fill: '#666' }} 
-                                      label={{ value: '销售金额', angle: 90, position: 'insideRight', fontSize: '11px' }}
-                                    />
-                                  )}
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ fontSize: '12px' }} />
-                                  <Legend 
-                                    verticalAlign="top" 
-                                    height={24} 
-                                    formatter={(value) => getFieldDisplayName(value)}
-                                    wrapperStyle={{ paddingBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}
-                                    iconType="line"
-                                    layout="horizontal"
-                                    iconSize={8}
-                                    itemStyle={{ fontSize: '11px', marginRight: '8px' }}
-                                  />
-                                  {filteredValueFields.map((key, index) => {
-                                    const commonSeriesProps = {
-                                      dataKey: key,
-                                      stroke: COLORS[index % COLORS.length],
-                                      name: getFieldDisplayName(key),
-                                      strokeWidth: 2,
-                                    };
-                                    
-                                    // 销售金额使用右侧Y轴，其他使用左侧Y轴
-                                    const yAxisId = key.toLowerCase() === 'salesum' ? 'right' : 'left';
-                                    
-                                    return (
-                                      <Line
-                                        key={key}
-                                        {...commonSeriesProps}
-                                        yAxisId={yAxisId}
-                                        type="monotone"
-                                        dot={{ r: 3 }}
-                                        activeDot={{ r: 5 }}
-                                      />
-                                    );
-                                  })}
-                                </LineChart>
-                              );
-                            case 'bar':
-                              return (
-                                <BarChart {...commonProps}>
-                                  <XAxis dataKey={timeField} style={{ fontSize: '12px' }} tick={{ fill: '#666' }} />
-                                  <YAxis 
-                                    yAxisId="left" 
-                                    style={{ fontSize: '12px' }} 
-                                    tick={{ fill: '#666' }} 
-                                    label={needDualYAxis ? { value: '销售数量/初始库存', angle: -90, position: 'insideLeft', fontSize: '11px' } : undefined}
-                                  />
-                                  {needDualYAxis && (
-                                    <YAxis 
-                                      yAxisId="right" 
-                                      orientation="right" 
-                                      style={{ fontSize: '12px' }} 
-                                      tick={{ fill: '#666' }} 
-                                      label={{ value: '销售金额', angle: 90, position: 'insideRight', fontSize: '11px' }}
-                                    />
-                                  )}
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                  <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ fontSize: '12px' }} />
-                                  <Legend 
-                                    verticalAlign="top" 
-                                    height={24} 
-                                    formatter={(value) => getFieldDisplayName(value)}
-                                    wrapperStyle={{ paddingBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}
-                                    iconType="rect"
-                                    layout="horizontal"
-                                    iconSize={8}
-                                    itemStyle={{ fontSize: '11px', marginRight: '8px' }}
-                                  />
-                                  {filteredValueFields.map((key, index) => {
-                                    const commonSeriesProps = {
-                                      dataKey: key,
-                                      name: getFieldDisplayName(key),
-                                    };
-                                    
-                                    // 销售金额使用右侧Y轴，其他使用左侧Y轴
-                                    const yAxisId = key.toLowerCase() === 'salesum' ? 'right' : 'left';
-                                    
-                                    return (
-                                      <Bar
-                                        key={key}
-                                        {...commonSeriesProps}
-                                        yAxisId={yAxisId}
-                                        fill={COLORS[index % COLORS.length]}
-                                        radius={[4, 4, 0, 0]}
-                                        barSize={20}
-                                      />
-                                    );
-                                  })}
-                                </BarChart>
-                              );
-                            default:
-                              return null;
-                          }
-                        };
-
-                        return renderChart();
+                                })}
+                              </BarChart>
+                            );
+                          default:
+                            return null;
+                        }
                       })()}
                     </ResponsiveContainer>
                   </div>
@@ -584,30 +595,28 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                   <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center">
                     <PieChartIcon size={16} className="mr-2 text-green-500" />
-                    销售构成比例
+                    新品销售构成比例
                   </h3>
                   <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={data.filter(item => item && typeof item === 'object').slice(0, 12)} // 过滤有效的数据项并只显示前12个
+                          data={data.filter(item => item && typeof item === 'object').slice(0, 12)}
                           dataKey={(entry) => {
                             if (!entry || typeof entry !== 'object') return 0;
                             
-                            // 尝试获取销售金额字段
                             const salesAmountKey = Object.keys(entry).find(key => 
-                              key.toLowerCase() === 'salesum' || key.toLowerCase() === '销售金额'
+                              key.toLowerCase() === 'c_sale' || key.toLowerCase() === '销售额'
                             );
                             
                             if (salesAmountKey && typeof entry[salesAmountKey] === 'number') {
                               return entry[salesAmountKey];
                             }
                             
-                            // 尝试获取其他数值字段
                             const numericKey = Object.keys(entry).find(key => 
                               typeof entry[key] === 'number' && 
-                              !['hours', '时段'].some(timeKey => 
-                                key.toLowerCase().includes(timeKey)
+                              !['c_gcode', '商品编码'].some(codeKey => 
+                                key.toLowerCase().includes(codeKey)
                               )
                             );
                             
@@ -616,22 +625,20 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
                           nameKey={(entry) => {
                             if (!entry || typeof entry !== 'object') return '未命名';
                             
-                            // 尝试获取时段字段
-                            const timeKey = Object.keys(entry).find(key => 
-                              ['hours', '时段'].some(timeField => 
-                                key.toLowerCase().includes(timeField)
+                            const codeKey = Object.keys(entry).find(key => 
+                              ['c_gcode', '商品编码'].some(codeField => 
+                                key.toLowerCase().includes(codeField)
                               )
                             );
                             
-                            if (timeKey && entry[timeKey]) {
-                              return entry[timeKey];
+                            if (codeKey && entry[codeKey]) {
+                              return entry[codeKey];
                             }
                             
-                            // 尝试获取其他非数值字段作为名称
                             const nameKey = Object.keys(entry).find(key => 
                               typeof entry[key] !== 'number' && 
-                              key.toLowerCase() !== 'salesum' && 
-                              key.toLowerCase() !== '销售金额'
+                              key.toLowerCase() !== 'c_sale' && 
+                              key.toLowerCase() !== '销售额'
                             );
                             
                             return nameKey ? entry[nameKey] : '未命名';
@@ -673,7 +680,7 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
 
             {viewMode === 'table' && (
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                {/* 显示列选择区域（严格按照图片复刻） */}
+                {/* 显示列选择区域 */}
                 <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex flex-wrap gap-2 items-center text-xs">
                   <span className="text-gray-600 font-medium">显示列：</span>
                   {data.length > 0 && Object.keys(data[0]).map((key) => (
@@ -755,4 +762,4 @@ exec up_rpt_io_sale_bytime @开始时间 , @结束时间 , @机构 , @部门 , @
   );
 };
 
-export default CategorySales;
+export default NewProductSales;

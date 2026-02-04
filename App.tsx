@@ -7,6 +7,8 @@ import AnalysisPlaceholder from './components/AnalysisPlaceholder';
 import ManagePlaceholder from './components/ManagePlaceholder';
 import ProfilePlaceholder from './components/ProfilePlaceholder';
 import CategorySales from './components/CategorySales';
+import NewProductSales from './components/NewProductSales';
+import LowStockReport from './components/LowStockReport';
 import CozeChat from './components/CozeChat';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -74,6 +76,8 @@ const AppContent: React.FC = () => {
           <Route path="/manage" element={<ManagePlaceholder />} />
           <Route path="/profile" element={<ProfilePlaceholder />} />
           <Route path="/category-sales" element={<CategorySales />} />
+          <Route path="/new-product-sales" element={<NewProductSales />} />
+          <Route path="/low-stock" element={<LowStockReport />} />
         </Route>
       </Routes>
       <BottomNav />
