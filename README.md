@@ -91,7 +91,8 @@ View your app in AI Studio: https://ai.studio/apps/drive/1G4pHBjE7QByWAOUe9poq8E
    ```
 
 ### API说明
-
+32132132
+1
 - **POST /api/execute-sql**：执行SQL查询
   - 请求体：`{ "sql": "SQL查询语句" }`
   - 响应：`{ "success": true, "data": [...], "message": "查询成功，返回 X 条记录" }`
