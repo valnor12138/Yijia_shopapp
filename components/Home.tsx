@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Megaphone, 
+import {
+  Megaphone,
   ChevronRight,
   PlusCircle,
   Tag,
@@ -13,14 +13,18 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Coins,
-  Handshake,
   Home as HomeIcon,
+  Clock,
+  Users,
+  GitCompare,
+  PackageSearch,
+  Truck,
+  TrendingUp,
   BrainCircuit,
   ShieldAlert,
   Network,
   MessageSquare,
-  Sparkles,
-  BarChart3
+  Sparkles
 } from 'lucide-react';
 import Dialog from './Dialog';
 
@@ -31,22 +35,25 @@ const Home: React.FC = () => {
 
   const reportGroups = [
     {
-      title: '品态管理类报表',
+      title: '销售运营分析',
       items: [
+        { id: 'sales_period', label: '销售客单时段', icon: <Clock className="text-blue-500" />, color: 'bg-blue-50' },
+        { id: 'customer_flow', label: '总客流日报', icon: <Users className="text-cyan-500" />, color: 'bg-cyan-50' },
+        { id: 'category', label: '品类销售分析', icon: <Tag className="text-green-500" />, color: 'bg-green-50', implemented: true },
+        { id: 'period_compare', label: '销售时段对比', icon: <GitCompare className="text-purple-500" />, color: 'bg-purple-50' },
+        { id: 'stockout', label: '畅销商品缺货', icon: <AlertTriangle className="text-red-400" />, color: 'bg-red-50' },
+        { id: 'product_sales', label: '商品销售分析', icon: <PackageSearch className="text-indigo-500" />, color: 'bg-indigo-50' },
+        { id: 'supplier_delivery', label: '供应商到货率', icon: <Truck className="text-teal-500" />, color: 'bg-teal-50' },
+        { id: 'negative_profit', label: '负毛利商品', icon: <Coins className="text-red-500" />, color: 'bg-red-50' },
+        { id: 'high_stock', label: '高库存分析', icon: <ArrowUpCircle className="text-yellow-500" />, color: 'bg-yellow-50' },
         { id: 'new', label: '新品报表', icon: <PlusCircle className="text-blue-400" />, color: 'bg-blue-50', implemented: true },
-        { id: 'category', label: '品类销售', icon: <Tag className="text-green-500" />, color: 'bg-green-50', implemented: true },
-        { id: 'rate', label: '动销率分析', icon: <BarChart className="text-cyan-400" />, color: 'bg-cyan-50', implemented: true },
-        { id: 'stockout', label: '缺货报表', icon: <AlertTriangle className="text-red-400" />, color: 'bg-red-50' },
-        { id: 'abnormal', label: '品态异常', icon: <XCircle className="text-purple-400" />, color: 'bg-purple-50' },
-        { id: 'slow', label: '滞销商品', icon: <TrendingDown className="text-orange-400" />, color: 'bg-orange-50' },
-        { id: 'high_stock', label: '高库存', icon: <ArrowUpCircle className="text-yellow-500" />, color: 'bg-yellow-50' },
-        { id: 'low_stock', label: '负库存', icon: <ArrowDownCircle className="text-orange-600" />, color: 'bg-orange-50', implemented: true },
-        { id: 'profit', label: '负毛利', icon: <Coins className="text-red-500" />, color: 'bg-red-50' },
-        { id: 'fulfillment', label: '货商履约', icon: <Handshake className="text-teal-500" />, color: 'bg-teal-50' },
+        { id: 'supplier_sales', label: '供应商动销率', icon: <TrendingUp className="text-orange-500" />, color: 'bg-orange-50' },
+        { id: 'abnormal', label: '品态异常表单', icon: <XCircle className="text-rose-400" />, color: 'bg-rose-50' },
+        { id: 'slow_selling', label: '滞销商品分析', icon: <TrendingDown className="text-orange-600" />, color: 'bg-orange-50' },
       ]
     },
     {
-      title: '销售数据分析',
+      title: '智能分析',
       items: [
         { id: 'ai_forecast', label: 'AI销售预测', icon: <BrainCircuit className="text-indigo-500" />, color: 'bg-indigo-50' },
         { id: 'ai_anomaly', label: '异常识别', icon: <ShieldAlert className="text-rose-500" />, color: 'bg-rose-50' },
