@@ -9,6 +9,17 @@ import ProfilePlaceholder from './components/ProfilePlaceholder';
 import CategorySales from './components/CategorySales';
 import NewProductSales from './components/NewProductSales';
 import LowStockReport from './components/LowStockReport';
+import SalesPeriodReport from './components/SalesPeriodReport';
+import CustomerFlowReport from './components/CustomerFlowReport';
+import PeriodCompareReport from './components/PeriodCompareReport';
+import StockoutReport from './components/StockoutReport';
+import ProductSalesReport from './components/ProductSalesReport';
+import SupplierDeliveryReport from './components/SupplierDeliveryReport';
+import NegativeProfitReport from './components/NegativeProfitReport';
+import HighStockReport from './components/HighStockReport';
+import AbnormalStatusReport from './components/AbnormalStatusReport';
+import SlowSalesReport from './components/SlowSalesReport';
+import SalesPerformanceReport from './components/SalesPerformanceReport';
 import CozeChat from './components/CozeChat';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -78,6 +89,17 @@ const AppContent: React.FC = () => {
           <Route path="/category-sales" element={<CategorySales />} />
           <Route path="/new-product-sales" element={<NewProductSales />} />
           <Route path="/low-stock" element={<LowStockReport />} />
+          <Route path="/sales-period" element={<SalesPeriodReport />} />
+          <Route path="/customer-flow" element={<CustomerFlowReport />} />
+          <Route path="/period-compare" element={<PeriodCompareReport />} />
+          <Route path="/stockout" element={<StockoutReport />} />
+          <Route path="/product-sales" element={<ProductSalesReport />} />
+          <Route path="/supplier-delivery" element={<SupplierDeliveryReport />} />
+          <Route path="/negative-profit" element={<NegativeProfitReport />} />
+          <Route path="/high-stock" element={<HighStockReport />} />
+          <Route path="/abnormal-status" element={<AbnormalStatusReport />} />
+          <Route path="/slow-sales" element={<SlowSalesReport />} />
+          <Route path="/supplier-sales" element={<SalesPerformanceReport />} />
         </Route>
       </Routes>
       <BottomNav />
