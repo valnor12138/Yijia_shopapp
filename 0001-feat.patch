@@ -1,0 +1,840 @@
+From 4860a922d7cfb0ad91d2f0de1179f0305d781ab6 Mon Sep 17 00:00:00 2001
+From: valnor12138 <theman12138@outlook.com>
+Date: Wed, 4 Feb 2026 20:38:09 +0800
+Subject: [PATCH 1/5] =?UTF-8?q?feat:=20=E6=B7=BB=E5=8A=A0=E7=99=BB?=
+ =?UTF-8?q?=E5=BD=95=E6=B3=A8=E5=86=8C=E9=A1=B5=E9=9D=A2=E5=92=8C=E8=AE=A4?=
+ =?UTF-8?q?=E8=AF=81=E5=8A=9F=E8=83=BD?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- 添加Login和Register组件实现用户登录注册界面
+- 添加PrivateRoute和PublicRoute实现路由权限控制
+- 添加AuthContext提供全局认证状态管理
+- 添加auth.ts封装认证相关API调用
+---
+ components/Login.tsx        | 215 ++++++++++++++++++++++++++
+ components/PrivateRoute.tsx |  22 +++
+ components/PublicRoute.tsx  |  22 +++
+ components/Register.tsx     | 292 ++++++++++++++++++++++++++++++++++++
+ services/AuthContext.tsx    |  96 ++++++++++++
+ services/auth.ts            | 119 +++++++++++++++
+ 6 files changed, 766 insertions(+)
+ create mode 100644 components/Login.tsx
+ create mode 100644 components/PrivateRoute.tsx
+ create mode 100644 components/PublicRoute.tsx
+ create mode 100644 components/Register.tsx
+ create mode 100644 services/AuthContext.tsx
+ create mode 100644 services/auth.ts
+
+diff --git a/components/Login.tsx b/components/Login.tsx
+new file mode 100644
+index 0000000..58b632d
+--- /dev/null
++++ b/components/Login.tsx
+@@ -0,0 +1,215 @@
++import React, { useState } from 'react';
++import { useNavigate, Link } from 'react-router-dom';
++import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
++import { useAuth } from '../services/AuthContext';
++
++interface LoginFormData {
++  email: string;
++  password: string;
++}
++
++interface LoginFormErrors {
++  email: string;
++  password: string;
++}
++
++const Login: React.FC = () => {
++  const navigate = useNavigate();
++  const { login } = useAuth();
++  const [formData, setFormData] = useState<LoginFormData>({
++    email: '',
++    password: ''
++  });
++  const [errors, setErrors] = useState<LoginFormErrors>({
++    email: '',
++    password: ''
++  });
++  const [isSubmitting, setIsSubmitting] = useState(false);
++  const [showPassword, setShowPassword] = useState(false);
++  const [loginError, setLoginError] = useState('');
++
++  const validateForm = (): boolean => {
++    const newErrors: LoginFormErrors = {
++      email: '',
++      password: ''
++    };
++
++    if (!formData.email) {
++      newErrors.email = '请输入邮箱';
++    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
++      newErrors.email = '请输入有效的邮箱地址';
++    }
++
++    if (!formData.password) {
++      newErrors.password = '请输入密码';
++    } else if (formData.password.length < 6) {
++      newErrors.password = '密码长度至少为6位';
++    }
++
++    setErrors(newErrors);
++    return Object.values(newErrors).every(error => error === '');
++  };
++
++  const handleSubmit = async (e: React.FormEvent) => {
++    e.preventDefault();
++    setLoginError('');
++
++    if (!validateForm()) {
++      return;
++    }
++
++    setIsSubmitting(true);
++
++    try {
++      // 使用认证服务登录
++      await new Promise(resolve => setTimeout(resolve, 1000));
++
++      const user = login(formData.email, formData.password);
++      
++      if (user) {
++        // 登录成功后跳转到首页
++        navigate('/');
++      } else {
++        setLoginError('登录失败，请检查邮箱和密码');
++      }
++    } catch (error) {
++      setLoginError('登录失败，请稍后重试');
++    } finally {
++      setIsSubmitting(false);
++    }
++  };
++
++  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
++    const { name, value } = e.target;
++    setFormData(prev => ({
++      ...prev,
++      [name]: value
++    }));
++
++    // 清除对应字段的错误
++    if (errors[name as keyof LoginFormErrors]) {
++      setErrors(prev => ({
++        ...prev,
++        [name]: ''
++      }));
++    }
++  };
++
++  return (
++    <div className="min-h-screen flex flex-col bg-gray-50">
++      {/* Header */}
++      <header className="bg-white border-b border-gray-100 py-4 px-4 sticky top-0 z-40 shadow-sm flex items-center">
++        <button
++          onClick={() => navigate(-1)}
++          className="text-gray-700 mr-4"
++        >
++          <ArrowLeft size={20} />
++        </button>
++        <h1 className="text-xl font-semibold text-gray-800 tracking-tight">登录</h1>
++      </header>
++
++      {/* Main Content */}
++      <main className="flex-1 flex flex-col justify-center px-6 py-8">
++        <div className="max-w-md mx-auto w-full">
++          {/* Logo/Brand */}
++          <div className="text-center mb-10">
++            <h2 className="text-2xl font-bold text-gray-800 mb-2">易家超市</h2>
++            <p className="text-gray-500">零售智能管理系统</p>
++          </div>
++
++          {/* Login Form */}
++          <form onSubmit={handleSubmit} className="space-y-6">
++            {/* Email Field */}
++            <div>
++              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
++                邮箱
++              </label>
++              <div className="relative">
++                <input
++                  type="email"
++                  id="email"
++                  name="email"
++                  value={formData.email}
++                  onChange={handleInputChange}
++                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
++                  placeholder="请输入邮箱地址"
++                  disabled={isSubmitting}
++                />
++              </div>
++              {errors.email && (
++                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
++              )}
++            </div>
++
++            {/* Password Field */}
++            <div>
++              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
++                密码
++              </label>
++              <div className="relative">
++                <input
++                  type={showPassword ? 'text' : 'password'}
++                  id="password"
++                  name="password"
++                  value={formData.password}
++                  onChange={handleInputChange}
++                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
++                  placeholder="请输入密码"
++                  disabled={isSubmitting}
++                />
++                <button
++                  type="button"
++                  onClick={() => setShowPassword(!showPassword)}
++                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
++                  disabled={isSubmitting}
++                >
++                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
++                </button>
++              </div>
++              {errors.password && (
++                <p className="mt-1 text-sm text-red-500">{errors.password}</p>
++              )}
++            </div>
++
++            {/* Login Error */}
++            {loginError && (
++              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
++                <p className="text-sm text-red-600">{loginError}</p>
++              </div>
++            )}
++
++            {/* Submit Button */}
++            <div>
++              <button
++                type="submit"
++                disabled={isSubmitting}
++                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
++              >
++                {isSubmitting ? (
++                  <span>登录中...</span>
++                ) : (
++                  <span>登录</span>
++                )}
++              </button>
++            </div>
++
++            {/* Register Link */}
++            <div className="text-center">
++              <p className="text-gray-600 text-sm">
++                还没有账号？
++                <Link
++                  to="/register"
++                  className="text-blue-600 hover:text-blue-800 font-medium ml-1"
++                >
++                  立即注册
++                </Link>
++              </p>
++            </div>
++          </form>
++        </div>
++      </main>
++    </div>
++  );
++};
++
++export default Login;
+\ No newline at end of file
+diff --git a/components/PrivateRoute.tsx b/components/PrivateRoute.tsx
+new file mode 100644
+index 0000000..4252ae8
+--- /dev/null
++++ b/components/PrivateRoute.tsx
+@@ -0,0 +1,22 @@
++import React, { ReactNode } from 'react';
++import { Navigate, Outlet, useLocation } from 'react-router-dom';
++import { useAuth } from '../services/AuthContext';
++
++interface PrivateRouteProps {
++  children?: ReactNode;
++}
++
++const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
++  const { isAuthenticated } = useAuth();
++  const location = useLocation();
++
++  // 如果用户未登录，重定向到登录页面，并保存当前位置以便登录后返回
++  if (!isAuthenticated) {
++    return <Navigate to="/login" state={{ from: location }} replace />;
++  }
++
++  // 如果有子组件，渲染子组件，否则渲染Outlet（用于嵌套路由）
++  return children ? children : <Outlet />;
++};
++
++export default PrivateRoute;
+\ No newline at end of file
+diff --git a/components/PublicRoute.tsx b/components/PublicRoute.tsx
+new file mode 100644
+index 0000000..d162b3c
+--- /dev/null
++++ b/components/PublicRoute.tsx
+@@ -0,0 +1,22 @@
++import React, { ReactNode } from 'react';
++import { Navigate, Outlet } from 'react-router-dom';
++import { useAuth } from '../services/AuthContext';
++
++interface PublicRouteProps {
++  children?: ReactNode;
++  restricted?: boolean; // 是否限制已登录用户访问
++}
++
++const PublicRoute: React.FC<PublicRouteProps> = ({ children, restricted = false }) => {
++  const { isAuthenticated } = useAuth();
++
++  // 如果页面被限制（如登录/注册页）且用户已登录，重定向到首页
++  if (restricted && isAuthenticated) {
++    return <Navigate to="/" replace />;
++  }
++
++  // 如果有子组件，渲染子组件，否则渲染Outlet（用于嵌套路由）
++  return children ? children : <Outlet />;
++};
++
++export default PublicRoute;
+\ No newline at end of file
+diff --git a/components/Register.tsx b/components/Register.tsx
+new file mode 100644
+index 0000000..07dcf95
+--- /dev/null
++++ b/components/Register.tsx
+@@ -0,0 +1,292 @@
++import React, { useState } from 'react';
++import { useNavigate, Link } from 'react-router-dom';
++import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
++import { useAuth } from '../services/AuthContext';
++
++interface RegisterFormData {
++  email: string;
++  name: string;
++  password: string;
++  confirmPassword: string;
++}
++
++interface RegisterFormErrors {
++  email: string;
++  name: string;
++  password: string;
++  confirmPassword: string;
++}
++
++const Register: React.FC = () => {
++  const navigate = useNavigate();
++  const { register } = useAuth();
++  const [formData, setFormData] = useState<RegisterFormData>({
++    email: '',
++    name: '',
++    password: '',
++    confirmPassword: ''
++  });
++  const [errors, setErrors] = useState<RegisterFormErrors>({
++    email: '',
++    name: '',
++    password: '',
++    confirmPassword: ''
++  });
++  const [isSubmitting, setIsSubmitting] = useState(false);
++  const [showPassword, setShowPassword] = useState(false);
++  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
++  const [registerError, setRegisterError] = useState('');
++
++  const validateForm = (): boolean => {
++    const newErrors: RegisterFormErrors = {
++      email: '',
++      name: '',
++      password: '',
++      confirmPassword: ''
++    };
++
++    if (!formData.email) {
++      newErrors.email = '请输入邮箱';
++    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
++      newErrors.email = '请输入有效的邮箱地址';
++    }
++
++    if (!formData.name) {
++      newErrors.name = '请输入用户名';
++    } else if (formData.name.length < 2) {
++      newErrors.name = '用户名长度至少为2位';
++    }
++
++    if (!formData.password) {
++      newErrors.password = '请输入密码';
++    } else if (formData.password.length < 6) {
++      newErrors.password = '密码长度至少为6位';
++    }
++
++    if (!formData.confirmPassword) {
++      newErrors.confirmPassword = '请确认密码';
++    } else if (formData.confirmPassword !== formData.password) {
++      newErrors.confirmPassword = '两次输入的密码不一致';
++    }
++
++    setErrors(newErrors);
++    return Object.values(newErrors).every(error => error === '');
++  };
++
++  const handleSubmit = async (e: React.FormEvent) => {
++    e.preventDefault();
++    setRegisterError('');
++
++    if (!validateForm()) {
++      return;
++    }
++
++    setIsSubmitting(true);
++
++    try {
++      // 模拟注册请求
++      await new Promise(resolve => setTimeout(resolve, 1000));
++
++      // 使用认证服务注册
++      const user = register({
++        id: '',
++        email: formData.email,
++        name: formData.name,
++        password: formData.password
++      });
++
++      if (user) {
++        // 注册成功后跳转到首页
++        navigate('/');
++      } else {
++        setRegisterError('注册失败，邮箱可能已存在');
++      }
++    } catch (error) {
++      setRegisterError('注册失败，请稍后重试');
++    } finally {
++      setIsSubmitting(false);
++    }
++  };
++
++  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
++    const { name, value } = e.target;
++    setFormData(prev => ({
++      ...prev,
++      [name]: value
++    }));
++
++    // 清除对应字段的错误
++    if (errors[name as keyof RegisterFormErrors]) {
++      setErrors(prev => ({
++        ...prev,
++        [name]: ''
++      }));
++    }
++  };
++
++  return (
++    <div className="min-h-screen flex flex-col bg-gray-50">
++      {/* Header */}
++      <header className="bg-white border-b border-gray-100 py-4 px-4 sticky top-0 z-40 shadow-sm flex items-center">
++        <button
++          onClick={() => navigate(-1)}
++          className="text-gray-700 mr-4"
++        >
++          <ArrowLeft size={20} />
++        </button>
++        <h1 className="text-xl font-semibold text-gray-800 tracking-tight">注册</h1>
++      </header>
++
++      {/* Main Content */}
++      <main className="flex-1 flex flex-col justify-center px-6 py-8">
++        <div className="max-w-md mx-auto w-full">
++          {/* Logo/Brand */}
++          <div className="text-center mb-8">
++            <h2 className="text-2xl font-bold text-gray-800 mb-2">易家超市</h2>
++            <p className="text-gray-500">创建新账号</p>
++          </div>
++
++          {/* Register Form */}
++          <form onSubmit={handleSubmit} className="space-y-6">
++            {/* Name Field */}
++            <div>
++              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
++                用户名
++              </label>
++              <input
++                type="text"
++                id="name"
++                name="name"
++                value={formData.name}
++                onChange={handleInputChange}
++                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
++                placeholder="请输入用户名"
++                disabled={isSubmitting}
++              />
++              {errors.name && (
++                <p className="mt-1 text-sm text-red-500">{errors.name}</p>
++              )}
++            </div>
++
++            {/* Email Field */}
++            <div>
++              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
++                邮箱
++              </label>
++              <input
++                type="email"
++                id="email"
++                name="email"
++                value={formData.email}
++                onChange={handleInputChange}
++                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
++                placeholder="请输入邮箱地址"
++                disabled={isSubmitting}
++              />
++              {errors.email && (
++                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
++              )}
++            </div>
++
++            {/* Password Field */}
++            <div>
++              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
++                密码
++              </label>
++              <div className="relative">
++                <input
++                  type={showPassword ? 'text' : 'password'}
++                  id="password"
++                  name="password"
++                  value={formData.password}
++                  onChange={handleInputChange}
++                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
++                  placeholder="请输入密码"
++                  disabled={isSubmitting}
++                />
++                <button
++                  type="button"
++                  onClick={() => setShowPassword(!showPassword)}
++                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
++                  disabled={isSubmitting}
++                >
++                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
++                </button>
++              </div>
++              {errors.password && (
++                <p className="mt-1 text-sm text-red-500">{errors.password}</p>
++              )}
++            </div>
++
++            {/* Confirm Password Field */}
++            <div>
++              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
++                确认密码
++              </label>
++              <div className="relative">
++                <input
++                  type={showConfirmPassword ? 'text' : 'password'}
++                  id="confirmPassword"
++                  name="confirmPassword"
++                  value={formData.confirmPassword}
++                  onChange={handleInputChange}
++                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`}
++                  placeholder="请再次输入密码"
++                  disabled={isSubmitting}
++                />
++                <button
++                  type="button"
++                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
++                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
++                  disabled={isSubmitting}
++                >
++                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
++                </button>
++              </div>
++              {errors.confirmPassword && (
++                <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
++              )}
++            </div>
++
++            {/* Register Error */}
++            {registerError && (
++              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
++                <p className="text-sm text-red-600">{registerError}</p>
++              </div>
++            )}
++
++            {/* Submit Button */}
++            <div>
++              <button
++                type="submit"
++                disabled={isSubmitting}
++                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
++              >
++                {isSubmitting ? (
++                  <span>注册中...</span>
++                ) : (
++                  <span>注册</span>
++                )}
++              </button>
++            </div>
++
++            {/* Login Link */}
++            <div className="text-center">
++              <p className="text-gray-600 text-sm">
++                已有账号？
++                <Link
++                  to="/login"
++                  className="text-blue-600 hover:text-blue-800 font-medium ml-1"
++                >
++                  立即登录
++                </Link>
++              </p>
++            </div>
++          </form>
++        </div>
++      </main>
++    </div>
++  );
++};
++
++export default Register;
+\ No newline at end of file
+diff --git a/services/AuthContext.tsx b/services/AuthContext.tsx
+new file mode 100644
+index 0000000..7e497f7
+--- /dev/null
++++ b/services/AuthContext.tsx
+@@ -0,0 +1,96 @@
++import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
++import { User, authService, AuthContextType } from './auth';
++
++// 创建认证上下文
++const AuthContext = createContext<AuthContextType | undefined>(undefined);
++
++// 认证提供者组件接口
++interface AuthProviderProps {
++  children: ReactNode;
++}
++
++// 认证提供者组件
++export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
++  const [user, setUser] = useState<User | null>(null);
++  const [isAuthenticated, setIsAuthenticated] = useState(false);
++  const [isLoading, setIsLoading] = useState(true);
++
++  // 初始化时检查用户状态
++  useEffect(() => {
++    const checkAuthStatus = () => {
++      const currentUser = authService.getCurrentUser();
++      const authenticated = authService.isAuthenticated();
++      setUser(currentUser);
++      setIsAuthenticated(authenticated);
++      setIsLoading(false);
++    };
++
++    checkAuthStatus();
++  }, []);
++
++  // 登录方法
++  const login = (email: string, password: string): User | null => {
++    const user = authService.login(email, password);
++    if (user) {
++      setUser(user);
++      setIsAuthenticated(true);
++    }
++    return user;
++  };
++
++  // 注册方法
++  const register = (userData: User): User | null => {
++    const user = authService.register(userData);
++    if (user) {
++      setUser(user);
++      setIsAuthenticated(true);
++    }
++    return user;
++  };
++
++  // 注销方法
++  const logout = () => {
++    authService.logout();
++    setUser(null);
++    setIsAuthenticated(false);
++  };
++
++  // 清除认证信息
++  const clearAuth = () => {
++    authService.clearAuth();
++    setUser(null);
++    setIsAuthenticated(false);
++  };
++
++  // 上下文值
++  const contextValue: AuthContextType = {
++    user,
++    isAuthenticated,
++    login,
++    register,
++    logout,
++    clearAuth
++  };
++
++  // 如果正在加载，返回null或加载指示器
++  if (isLoading) {
++    return null; // 或者返回一个加载组件
++  }
++
++  return (
++    <AuthContext.Provider value={contextValue}>
++      {children}
++    </AuthContext.Provider>
++  );
++};
++
++// 自定义钩子，用于在组件中访问认证上下文
++export const useAuth = (): AuthContextType => {
++  const context = useContext(AuthContext);
++  if (context === undefined) {
++    throw new Error('useAuth must be used within an AuthProvider');
++  }
++  return context;
++};
++
++export default AuthContext;
+\ No newline at end of file
+diff --git a/services/auth.ts b/services/auth.ts
+new file mode 100644
+index 0000000..addeef5
+--- /dev/null
++++ b/services/auth.ts
+@@ -0,0 +1,119 @@
++// 用户类型定义
++export interface User {
++  id: string;
++  email: string;
++  name: string;
++  password?: string; // 密码字段，仅用于本地存储
++}
++
++// 认证服务类
++class AuthService {
++  // 获取用户列表
++  private getUsers(): User[] {
++    const usersStr = localStorage.getItem('users');
++    if (usersStr) {
++      try {
++        return JSON.parse(usersStr);
++      } catch (error) {
++        console.error('解析用户列表失败:', error);
++        return [];
++      }
++    }
++    return [];
++  }
++
++  // 保存用户列表
++  private saveUsers(users: User[]): void {
++    localStorage.setItem('users', JSON.stringify(users));
++  }
++
++  // 获取当前用户
++  getCurrentUser(): User | null {
++    const userStr = localStorage.getItem('user');
++    if (userStr) {
++      try {
++        const user = JSON.parse(userStr);
++        // 移除密码字段，避免在前端显示
++        const { password, ...userWithoutPassword } = user;
++        return userWithoutPassword;
++      } catch (error) {
++        console.error('解析用户信息失败:', error);
++        this.logout();
++        return null;
++      }
++    }
++    return null;
++  }
++
++  // 检查用户是否已登录
++  isAuthenticated(): boolean {
++    return localStorage.getItem('isLoggedIn') === 'true' && this.getCurrentUser() !== null;
++  }
++
++  // 登录
++  login(email: string, password: string): User | null {
++    const users = this.getUsers();
++    const user = users.find(u => u.email === email && u.password === password);
++    
++    if (user) {
++      localStorage.setItem('user', JSON.stringify(user));
++      localStorage.setItem('isLoggedIn', 'true');
++      // 移除密码字段，避免在前端显示
++      const { password: _, ...userWithoutPassword } = user;
++      return userWithoutPassword;
++    }
++    return null;
++  }
++
++  // 注册
++  register(user: User): User | null {
++    const users = this.getUsers();
++    
++    // 检查邮箱是否已存在
++    if (users.some(u => u.email === user.email)) {
++      return null;
++    }
++    
++    // 生成唯一ID
++    const newUser = {
++      ...user,
++      id: Date.now().toString()
++    };
++    
++    // 保存新用户
++    const updatedUsers = [...users, newUser];
++    this.saveUsers(updatedUsers);
++    
++    // 自动登录
++    localStorage.setItem('user', JSON.stringify(newUser));
++    localStorage.setItem('isLoggedIn', 'true');
++    
++    // 移除密码字段，避免在前端显示
++    const { password: _, ...userWithoutPassword } = newUser;
++    return userWithoutPassword;
++  }
++
++  // 注销
++  logout(): void {
++    localStorage.removeItem('user');
++    localStorage.removeItem('isLoggedIn');
++  }
++
++  // 清除所有认证信息
++  clearAuth(): void {
++    localStorage.clear();
++  }
++}
++
++// 导出单例实例
++export const authService = new AuthService();
++
++// 导出认证上下文类型
++export interface AuthContextType {
++  user: User | null;
++  isAuthenticated: boolean;
++  login: (email: string, password: string) => User | null;
++  register: (user: User) => User | null;
++  logout: () => void;
++  clearAuth: () => void;
++}
+\ No newline at end of file
+-- 
+2.51.0.windows.1
+

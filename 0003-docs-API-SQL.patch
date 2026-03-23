@@ -1,0 +1,31 @@
+From 49ce3c752797e3c29a5f05b21165ef96a10887b9 Mon Sep 17 00:00:00 2001
+From: YDLinStars <ydlinstars@example.com>
+Date: Tue, 17 Mar 2026 12:32:33 +0800
+Subject: [PATCH 3/5] =?UTF-8?q?docs:=20=E6=9B=B4=E6=96=B0API=E8=AF=B4?=
+ =?UTF-8?q?=E6=98=8E=E6=96=87=E6=A1=A3=EF=BC=8C=E6=B7=BB=E5=8A=A0SQL?=
+ =?UTF-8?q?=E6=9F=A5=E8=AF=A2=E7=A4=BA=E4=BE=8B?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ README.md | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index d8849e7..cc2e886 100644
+--- a/README.md
++++ b/README.md
+@@ -91,7 +91,8 @@ View your app in AI Studio: https://ai.studio/apps/drive/1G4pHBjE7QByWAOUe9poq8E
+    ```
+ 
+ ### API说明
+-
++32132132
++1
+ - **POST /api/execute-sql**：执行SQL查询
+   - 请求体：`{ "sql": "SQL查询语句" }`
+   - 响应：`{ "success": true, "data": [...], "message": "查询成功，返回 X 条记录" }`
+-- 
+2.51.0.windows.1
+
