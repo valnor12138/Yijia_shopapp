@@ -37,19 +37,19 @@ const Home: React.FC = () => {
     {
       title: '销售运营分析',
       items: [
-        { id: 'sales_period', label: '销售客单时段', icon: <Clock className="text-blue-500" />, color: 'bg-blue-50' },
-        { id: 'customer_flow', label: '总客流日报', icon: <Users className="text-cyan-500" />, color: 'bg-cyan-50' },
+        { id: 'sales_period', label: '销售客单时段', icon: <Clock className="text-blue-500" />, color: 'bg-blue-50', implemented: true },
+        { id: 'customer_flow', label: '总客流日报', icon: <Users className="text-cyan-500" />, color: 'bg-cyan-50', implemented: true },
         { id: 'category', label: '品类销售分析', icon: <Tag className="text-green-500" />, color: 'bg-green-50', implemented: true },
-        { id: 'period_compare', label: '销售时段对比', icon: <GitCompare className="text-purple-500" />, color: 'bg-purple-50' },
-        { id: 'stockout', label: '畅销商品缺货', icon: <AlertTriangle className="text-red-400" />, color: 'bg-red-50' },
-        { id: 'product_sales', label: '商品销售分析', icon: <PackageSearch className="text-indigo-500" />, color: 'bg-indigo-50' },
-        { id: 'supplier_delivery', label: '供应商到货率', icon: <Truck className="text-teal-500" />, color: 'bg-teal-50' },
-        { id: 'negative_profit', label: '负毛利商品', icon: <Coins className="text-red-500" />, color: 'bg-red-50' },
-        { id: 'high_stock', label: '高库存分析', icon: <ArrowUpCircle className="text-yellow-500" />, color: 'bg-yellow-50' },
+        { id: 'period_compare', label: '销售时段对比', icon: <GitCompare className="text-purple-500" />, color: 'bg-purple-50', implemented: true },
+        { id: 'stockout', label: '畅销商品缺货', icon: <AlertTriangle className="text-red-400" />, color: 'bg-red-50', implemented: true },
+        { id: 'product_sales', label: '商品销售分析', icon: <PackageSearch className="text-indigo-500" />, color: 'bg-indigo-50', implemented: true },
+        { id: 'supplier_delivery', label: '供应商到货率', icon: <Truck className="text-teal-500" />, color: 'bg-teal-50', implemented: true },
+        { id: 'negative_profit', label: '负毛利商品', icon: <Coins className="text-red-500" />, color: 'bg-red-50', implemented: true },
+        { id: 'high_stock', label: '高库存分析', icon: <ArrowUpCircle className="text-yellow-500" />, color: 'bg-yellow-50', implemented: true },
         { id: 'new', label: '新品报表', icon: <PlusCircle className="text-blue-400" />, color: 'bg-blue-50', implemented: true },
-        { id: 'supplier_sales', label: '供应商动销率', icon: <TrendingUp className="text-orange-500" />, color: 'bg-orange-50' },
-        { id: 'abnormal', label: '品态异常表单', icon: <XCircle className="text-rose-400" />, color: 'bg-rose-50' },
-        { id: 'slow_selling', label: '滞销商品分析', icon: <TrendingDown className="text-orange-600" />, color: 'bg-orange-50' },
+        { id: 'supplier_sales', label: '供应商动销率', icon: <TrendingUp className="text-orange-500" />, color: 'bg-orange-50', implemented: true },
+        { id: 'abnormal', label: '品态异常表单', icon: <XCircle className="text-rose-400" />, color: 'bg-rose-50', implemented: true },
+        { id: 'slow_selling', label: '滞销商品分析', icon: <TrendingDown className="text-orange-600" />, color: 'bg-orange-50', implemented: true },
       ]
     },
     {
@@ -75,6 +75,28 @@ const Home: React.FC = () => {
         navigate('/new-product-sales');
       } else if (item.id === 'low_stock') {
         navigate('/low-stock');
+      } else if (item.id === 'sales_period') {
+        navigate('/sales-period');
+      } else if (item.id === 'customer_flow') {
+        navigate('/customer-flow');
+      } else if (item.id === 'period_compare') {
+        navigate('/period-compare');
+      } else if (item.id === 'stockout') {
+        navigate('/stockout');
+      } else if (item.id === 'product_sales') {
+        navigate('/product-sales');
+      } else if (item.id === 'supplier_delivery') {
+        navigate('/supplier-delivery');
+      } else if (item.id === 'negative_profit') {
+        navigate('/negative-profit');
+      } else if (item.id === 'high_stock') {
+        navigate('/high-stock');
+      } else if (item.id === 'abnormal') {
+        navigate('/abnormal-status');
+      } else if (item.id === 'slow_selling') {
+        navigate('/slow-sales');
+      } else if (item.id === 'supplier_sales') {
+        navigate('/supplier-sales');
       } else {
         navigate('/sales-rate-analysis');
       }
