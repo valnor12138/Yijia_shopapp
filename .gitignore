@@ -31,3 +31,6 @@ server/.env.local
 *.njsproj
 *.sln
 *.sw?
+
+# 临时文件夹 - 用于存放参考信息
+tmp

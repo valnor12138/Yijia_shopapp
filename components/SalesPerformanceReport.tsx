@@ -235,7 +235,44 @@ const SalesPerformanceReport: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [context, setContext] = useState<{ providerCode?: string; providerName?: string; categoryCode?: string; categoryName?: string }>({});
 
-  const runAnalysis = async () => {
+interface BreadcrumbItem {
+  subReport: SubReportType;
+  context: { providerCode?: string; providerName?: string; categoryCode?: string; categoryName?: string };
+  label: string;
+}
+
+const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([]);
+
+const getCurrentBreadcrumb = () => {
+  return breadcrumb;
+};
+
+const handleBack = () => {
+  if (breadcrumb.length > 1) {
+    const newBreadcrumb = breadcrumb.slice(0, -1);
+    const lastItem = newBreadcrumb[newBreadcrumb.length - 1];
+    setActiveSubReport(lastItem.subReport);
+    setContext(lastItem.context);
+    setSql(getSqlForReport(lastItem.subReport, lastItem.context));
+    setBreadcrumb(newBreadcrumb);
+  } else if (breadcrumb.length === 1) {
+    navigate('/');
+  } else {
+    navigate('/');
+  }
+};
+
+const handleBreadcrumbClick = (index: number) => {
+  if (index < breadcrumb.length - 1) {
+    const targetItem = breadcrumb[index];
+    setActiveSubReport(targetItem.subReport);
+    setContext(targetItem.context);
+    setSql(getSqlForReport(targetItem.subReport, targetItem.context));
+    setBreadcrumb(breadcrumb.slice(0, index + 1));
+  }
+};
+
+const runAnalysis = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -303,13 +340,23 @@ const SalesPerformanceReport: React.FC = () => {
 
   const handleRowClick = (row: any) => {
     if (activeSubReport === 'supplier') {
-      setContext({ providerCode: row['供应商号'], providerName: row['供应商名称'] });
-      setSql(getSqlForReport('supplierDetail', { providerCode: row['供应商号'], providerName: row['供应商名称'] }));
+      const newContext = { providerCode: row['供应商号'], providerName: row['供应商名称'] };
+      setContext(newContext);
+      setSql(getSqlForReport('supplierDetail', newContext));
       setActiveSubReport('supplierDetail');
+      setBreadcrumb([
+        { subReport: 'supplier', context: {}, label: '动销率' },
+        { subReport: 'supplierDetail', context: newContext, label: '供应商不动销明细' }
+      ]);
     } else if (activeSubReport === 'category') {
-      setContext({ categoryCode: row['分类号码'], categoryName: row['分类名称'] });
-      setSql(getSqlForReport('noSales', { categoryCode: row['分类号码'], categoryName: row['分类名称'] }));
+      const newContext = { categoryCode: row['分类号码'], categoryName: row['分类名称'] };
+      setContext(newContext);
+      setSql(getSqlForReport('noSales', newContext));
       setActiveSubReport('noSales');
+      setBreadcrumb([
+        { subReport: 'category', context: {}, label: '动销率' },
+        { subReport: 'noSales', context: newContext, label: '不动销商品明细' }
+      ]);
     }
   };
 
@@ -369,45 +416,52 @@ const SalesPerformanceReport: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
-      <header className="bg-white border-b border-gray-100 px-3 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center">
-          <button onClick={() => navigate('/')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors mr-2">
+      <header className="bg-white border-b border-gray-100 px-3 py-2 shrink-0">
+        <div className="flex items-center mb-1">
+          <button onClick={handleBack} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors mr-2">
             <ChevronLeft size={20} className="text-gray-600" />
           </button>
-          <div>
-            <h1 className="text-base font-semibold text-gray-800">销售动销分析</h1>
-            <p className="text-[10px] text-gray-500">供应商动销率 / 品类动销率</p>
-          </div>
+          <h1 className="text-base font-semibold text-gray-800">销售动销分析</h1>
         </div>
-        <button onClick={runAnalysis} disabled={loading} className="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 transition-colors flex items-center disabled:opacity-50">
-          {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Play size={14} className="mr-1" />}刷新
-        </button>
+        {breadcrumb.length > 0 && (
+          <div className="flex items-center text-xs text-gray-500 pl-1">
+            <span
+              className="hover:text-blue-500 cursor-pointer transition-colors"
+              onClick={() => navigate('/')}
+            >
+              首页
+            </span>
+            {breadcrumb.map((item, index) => (
+              <React.Fragment key={index}>
+                <span className="mx-1">/</span>
+                {index === breadcrumb.length - 1 ? (
+                  <span className="text-blue-500 font-medium">{item.label}</span>
+                ) : (
+                  <span
+                    className="hover:text-blue-500 cursor-pointer transition-colors"
+                    onClick={() => handleBreadcrumbClick(index)}
+                  >
+                    {item.label}
+                  </span>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
       </header>
 
-      {hasContext && (
-        <div className="bg-blue-50 px-3 py-2 flex items-center justify-between shrink-0">
-          <div className="flex items-center text-xs text-blue-700">
-            <Layers size={14} className="mr-1" />
-            <span>当前筛选：</span>
-            {context.providerName && <span className="font-medium ml-1">{context.providerName}</span>}
-            {context.categoryName && <span className="font-medium ml-1">{context.categoryName}</span>}
-          </div>
-          <button
-            onClick={() => {
-              if (context.providerCode) {
-                setContext({});
-                setSql(getSqlForReport('supplier'));
-                setActiveSubReport('supplier');
-              } else if (context.categoryCode) {
-                setContext({});
-                setSql(getSqlForReport('category'));
-                setActiveSubReport('category');
-              }
-            }}
-            className="text-xs text-blue-500 hover:text-blue-700 underline"
-          >
-            重置
-          </button>
+      {(activeSubReport === 'supplierDetail' || activeSubReport === 'noSales') && context.providerName && (
+        <div className="bg-blue-50 px-3 py-2 flex items-center shrink-0">
+          <span className="text-xs text-blue-700">当前筛选供应商：</span>
+          <span className="text-xs text-blue-900 font-semibold ml-1">{context.providerName}</span>
+          <span className="text-xs text-gray-500 ml-2">({context.providerCode})</span>
+        </div>
+      )}
+      {(activeSubReport === 'noSales') && context.categoryName && (
+        <div className="bg-blue-50 px-3 py-2 flex items-center shrink-0">
+          <span className="text-xs text-blue-700">当前筛选分类：</span>
+          <span className="text-xs text-blue-900 font-semibold ml-1">{context.categoryName}</span>
+          <span className="text-xs text-gray-500 ml-2">({context.categoryCode})</span>
         </div>
       )}
 
